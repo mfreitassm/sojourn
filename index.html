@@ -7,21 +7,22 @@
 <meta name="description" content="Describe a trip and build a research-ready brief — tracked with cost, checklist, and status.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,500;0,600;1,500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/design-system.css">
 <link rel="stylesheet" href="css/plan.css">
 <link rel="stylesheet" href="css/my-year.css">
 <style>
   :root {
-    --bg: #f5f3ee;
+    --bg: #f6f2ea;
     --surface: #ffffff;
-    --surface-2: #ece7db;
-    --ink: #14181d;
-    --ink-soft: #6b6a60;
-    --border: #e1dcce;
-    --accent: #96723a;
+    --surface-2: #ece5d5;
+    --ink: #201d18;
+    --ink-soft: #6f6a5d;
+    --border: #e4dcc9;
+    --accent: #9c7038;
     --accent-soft: #f0e6d1;
-    --on-accent: #14181d;
-    --warm: #a8502f;
+    --on-accent: #fbf7ef;
+    --warm: #b1552f;
     --warm-soft: #f5e4d8;
     --good: #4b7a5d;
     --good-soft: #e6efe8;
@@ -29,32 +30,52 @@
     --warn-soft: #f6ecd4;
     --neutral: #6e6a5f;
     --neutral-soft: #e9e4d6;
+    --olive: #6b7350;
+    --olive-soft: #eaeddc;
+    --ocean: #3d6a7a;
+    --ocean-soft: #e2eef1;
     --shadow: 0 1px 2px rgba(20,24,29,0.05), 0 10px 28px -14px rgba(20,24,29,0.22);
+    --shadow-float: 0 30px 70px -24px rgba(32,29,24,0.38);
     --radius: 10px;
+    --radius-lg: 20px;
+    --radius-xl: 30px;
+    --overlay-img: linear-gradient(180deg, rgba(20,18,14,0) 0%, rgba(20,18,14,0.05) 40%, rgba(20,18,14,0.78) 100%);
+    --overlay-img-full: linear-gradient(180deg, rgba(20,18,14,0.12) 0%, rgba(20,18,14,0.28) 45%, rgba(20,18,14,0.86) 100%);
+    --ease-premium: cubic-bezier(0.16, 1, 0.3, 1);
   }
   :root:not([data-theme="light"]) {
     @media (prefers-color-scheme: dark) {
-      --bg: #0f1216; --surface: #171b20; --surface-2: #1d232a;
-      --ink: #ede9de; --ink-soft: #9c978b; --border: #2b3038;
-      --accent: #c9a15c; --accent-soft: #2a2417;
-      --on-accent: #14181d;
-      --warm: #d98b5f; --warm-soft: #2e2019;
+      --bg: #100e0b; --surface: #1a1712; --surface-2: #221e17;
+      --ink: #f1ece0; --ink-soft: #a89f8d; --border: #322c22;
+      --accent: #d1a462; --accent-soft: #2c2416;
+      --on-accent: #1a1712;
+      --warm: #dd9264; --warm-soft: #2e2019;
       --good: #86b494; --good-soft: #1c2620;
       --warn: #d6a24e; --warn-soft: #2b2416;
       --neutral: #9a968a; --neutral-soft: #23262b;
+      --olive: #a3ac82; --olive-soft: #212416;
+      --ocean: #86bccd; --ocean-soft: #16262b;
       --shadow: 0 1px 2px rgba(0,0,0,0.35), 0 12px 32px -14px rgba(0,0,0,0.6);
+      --shadow-float: 0 30px 70px -20px rgba(0,0,0,0.65);
+      --overlay-img: linear-gradient(180deg, rgba(6,5,3,0) 0%, rgba(6,5,3,0.1) 40%, rgba(6,5,3,0.88) 100%);
+      --overlay-img-full: linear-gradient(180deg, rgba(6,5,3,0.2) 0%, rgba(6,5,3,0.4) 45%, rgba(6,5,3,0.92) 100%);
     }
   }
   :root[data-theme="dark"] {
-    --bg: #0f1216; --surface: #171b20; --surface-2: #1d232a;
-    --ink: #ede9de; --ink-soft: #9c978b; --border: #2b3038;
-    --accent: #c9a15c; --accent-soft: #2a2417;
-    --on-accent: #14181d;
-    --warm: #d98b5f; --warm-soft: #2e2019;
+    --bg: #100e0b; --surface: #1a1712; --surface-2: #221e17;
+    --ink: #f1ece0; --ink-soft: #a89f8d; --border: #322c22;
+    --accent: #d1a462; --accent-soft: #2c2416;
+    --on-accent: #1a1712;
+    --warm: #dd9264; --warm-soft: #2e2019;
     --good: #86b494; --good-soft: #1c2620;
     --warn: #d6a24e; --warn-soft: #2b2416;
     --neutral: #9a968a; --neutral-soft: #23262b;
+    --olive: #a3ac82; --olive-soft: #212416;
+    --ocean: #86bccd; --ocean-soft: #16262b;
     --shadow: 0 1px 2px rgba(0,0,0,0.35), 0 12px 32px -14px rgba(0,0,0,0.6);
+    --shadow-float: 0 30px 70px -20px rgba(0,0,0,0.65);
+    --overlay-img: linear-gradient(180deg, rgba(6,5,3,0) 0%, rgba(6,5,3,0.1) 40%, rgba(6,5,3,0.88) 100%);
+    --overlay-img-full: linear-gradient(180deg, rgba(6,5,3,0.2) 0%, rgba(6,5,3,0.4) 45%, rgba(6,5,3,0.92) 100%);
   }
   * { box-sizing: border-box; }
   body {
@@ -74,32 +95,16 @@
   input:focus, select:focus, textarea:focus, button:focus-visible {
     outline: 2px solid var(--accent); outline-offset: 1px;
   }
-  .wrap { max-width: 960px; margin: 0 auto; padding: 0 24px 100px; }
+  .wrap { max-width: 1000px; margin: 0 auto; padding: 0 28px 100px; }
 
   /* ---- top bar ---- */
   .topbar {
-    padding: 40px 0 22px; border-bottom: 1px solid var(--border);
+    padding: 52px 0 28px; border-bottom: 1px solid var(--border);
     display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap;
   }
-  .topbar .eyebrow { text-transform: uppercase; letter-spacing: 0.16em; font-size: 11px; font-weight: 700; color: var(--accent); margin-bottom: 10px; }
-  .topbar h1 {
-    font-size: 34px; font-style: italic; font-weight: 500; letter-spacing: -0.01em;
-  }
+  .topbar .eyebrow { margin-bottom: 12px; }
+  .topbar h1 { font-family: 'Fraunces', serif; font-style: italic; font-weight: 500; font-size: clamp(30px, 4.2vw, 42px); letter-spacing: -0.01em; margin: 0; }
   .topbar .actions { display: flex; gap: 8px; }
-
-  .btn {
-    display: inline-flex; align-items: center; gap: 6px; border-radius: 8px;
-    padding: 9px 15px; font-size: 13.5px; font-weight: 600; border: 1px solid var(--border);
-    background: var(--surface); color: var(--ink); transition: border-color 0.15s ease;
-  }
-  .btn:hover { border-color: var(--accent); }
-  .btn.primary { background: var(--accent); color: var(--on-accent); border-color: var(--accent); font-weight: 700; }
-  .btn.primary:hover { opacity: 0.9; }
-  .btn.ghost { border-color: transparent; background: transparent; }
-  .btn.ghost:hover { background: var(--surface-2); }
-  .btn.danger { color: var(--warm); }
-  .btn.small { padding: 6px 11px; font-size: 12.5px; }
-  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
   .banner {
     margin: 20px 0 0; padding: 12px 16px; border-radius: var(--radius); font-size: 13px;
@@ -109,12 +114,12 @@
   /* ---- profile strip ---- */
   .profile-strip {
     margin-top: 24px; background: var(--surface); border: 1px solid var(--border);
-    border-radius: var(--radius); padding: 18px 22px; box-shadow: var(--shadow);
+    border-radius: var(--radius-lg); padding: 20px 26px; box-shadow: var(--shadow);
     display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
   }
-  .profile-strip .pf-main { display: flex; gap: 26px; flex-wrap: wrap; font-size: 13.5px; }
+  .profile-strip .pf-main { display: flex; gap: 30px; flex-wrap: wrap; font-size: 13.5px; }
   .profile-strip .pf-item .k { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-soft); margin-bottom: 3px; }
-  .profile-strip .pf-item .v { font-weight: 700; }
+  .profile-strip .pf-item .v { font-weight: 700; font-family: 'Fraunces', serif; font-size: 15px; }
   .chip-row { display: flex; flex-wrap: wrap; gap: 6px; }
   .chip {
     font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 20px;
@@ -122,29 +127,36 @@
   }
 
   /* ---- trip grid ---- */
-  section.trips { padding: 48px 0 8px; }
-  .section-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
-  .section-head h2 { font-size: 23px; }
-  .empty-state { padding: 64px 20px; text-align: center; color: var(--ink-soft); border: 1px dashed var(--border); border-radius: var(--radius); }
-  .empty-state .btn { margin-top: 14px; }
+  section.trips { padding: 52px 0 8px; }
+  .section-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 22px; flex-wrap: wrap; gap: 10px; }
+  .section-head h2 { font-family: 'Fraunces', serif; font-weight: 600; font-size: 24px; }
+  .empty-state { padding: 72px 20px; text-align: center; color: var(--ink-soft); border: 1px dashed var(--border); border-radius: var(--radius-lg); }
+  .empty-state .btn { margin-top: 16px; }
 
-  .trip-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 18px; }
+  .trip-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 22px; }
   .trip-card {
-    text-align: left; background: var(--surface); border: 1px solid var(--border); border-top: 2px solid var(--accent);
-    border-radius: var(--radius); padding: 20px 22px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 11px;
-    transition: box-shadow 0.15s ease, transform 0.15s ease;
+    text-align: left; background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); box-shadow: var(--shadow); display: flex; flex-direction: column;
+    transition: box-shadow 0.25s var(--ease-premium), transform 0.25s var(--ease-premium);
+    overflow: hidden;
   }
-  .trip-card:hover { box-shadow: 0 1px 2px rgba(20,24,29,0.06), 0 16px 34px -14px rgba(20,24,29,0.32); transform: translateY(-1px); }
+  .trip-card:hover { box-shadow: var(--shadow-float); transform: translateY(-3px); }
+  .trip-card-img { height: 168px; position: relative; }
+  .trip-card-img .status-pill { position: absolute; top: 14px; right: 14px; }
+  .trip-card-img-title { position: absolute; left: 18px; right: 18px; bottom: 14px; color: #fff; z-index: 1; }
+  .trip-card-img-title h3 { font-size: 19px; color: #fff; margin: 0; }
+  .trip-card-img-title .route { color: rgba(255,255,255,0.82); }
+  .trip-card-body { padding: 18px 20px 20px; display: flex; flex-direction: column; gap: 11px; flex: 1; }
   .trip-card .row1 { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
   .trip-card h3 { font-size: 18px; }
   .trip-card .route { font-size: 12px; color: var(--ink-soft); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.04em; }
-  .status-pill { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; padding: 4px 10px; border-radius: 20px; white-space: nowrap; }
+  .status-pill { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; padding: 5px 11px; border-radius: 20px; white-space: nowrap; }
   .status-idea { background: var(--neutral-soft); color: var(--neutral); }
   .status-researching { background: var(--accent-soft); color: var(--accent); }
   .status-ready { background: var(--warn-soft); color: var(--warn); }
   .status-booked { background: var(--good-soft); color: var(--good); }
   .trip-card .meta-row { display: flex; gap: 14px; font-size: 12.5px; color: var(--ink-soft); flex-wrap: wrap; }
-  .trip-card .cost { font-size: 21px; font-weight: 700; font-variant-numeric: tabular-nums; margin-top: 2px; font-family: 'Fraunces', serif; }
+  .trip-card .cost { font-size: 22px; font-weight: 600; font-variant-numeric: tabular-nums; margin-top: 2px; font-family: 'Fraunces', serif; }
   .trip-card .cost small { font-size: 12px; font-weight: 500; color: var(--ink-soft); font-family: 'Manrope', sans-serif; }
   .trip-card .checklist-progress { font-size: 11.5px; color: var(--ink-soft); }
   .progress-bar { height: 4px; border-radius: 4px; background: var(--surface-2); overflow: hidden; margin-top: 5px; }
@@ -153,13 +165,15 @@
 
   /* ---- modal/panel ---- */
   .overlay {
-    position: fixed; inset: 0; background: rgba(15,18,22,0.55); backdrop-filter: blur(3px);
+    position: fixed; inset: 0; background: rgba(20,18,14,0.58); backdrop-filter: blur(6px);
     display: flex; align-items: flex-start; justify-content: center; padding: 40px 20px; z-index: 50; overflow-y: auto;
   }
   .panel {
-    background: var(--surface); border-radius: 14px; border: 1px solid var(--border);
-    max-width: 720px; width: 100%; padding: 30px 32px 34px; box-shadow: var(--shadow); margin-bottom: 40px;
+    background: var(--surface); border-radius: var(--radius-xl); border: 1px solid var(--border);
+    max-width: 720px; width: 100%; padding: 34px 36px 36px; box-shadow: var(--shadow-float); margin-bottom: 40px;
+    animation: scale-in 0.3s var(--ease-premium) both;
   }
+  @media (prefers-reduced-motion: reduce) { .panel { animation: none; } }
   .panel-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 22px; gap: 12px; }
   .panel-head h2 { font-size: 23px; }
   .field { margin-bottom: 17px; }
@@ -627,7 +641,7 @@
   function renderTopbar() {
     return (
       '<div class="wrap"><div class="topbar">' +
-        '<div><div class="eyebrow">Private travel planning</div><h1>Sojourn</h1></div>' +
+        '<div><p class="eyebrow">My trips</p><h1>Everything you’re planning.</h1></div>' +
         '<div class="actions">' +
           '<button class="btn" data-action="edit-profile">Edit profile</button>' +
           '<button class="btn primary" data-action="new-trip">+ Plan a trip</button>' +
@@ -682,12 +696,18 @@
     var statusMeta = STATUS_OPTIONS.filter(function (s) { return s.key === trip.status; })[0] || STATUS_OPTIONS[0];
     var prog = checklistProgress(trip);
     var pct = prog.total ? Math.round((prog.done / prog.total) * 100) : 0;
-    return (
-      '<div class="trip-card" data-trip="' + trip.id + '">' +
-        '<div class="row1">' +
-          '<div><h3>' + escapeHtml(trip.title || route) + '</h3><div class="route">' + escapeHtml(trip.origin || "") + ' → ' + escapeHtml(route) + '</div></div>' +
+    var img = (window.SojournPlan && window.SojournPlan.matchDestination) ? window.SojournPlan.matchDestination((trip.title || "") + " " + route) : null;
+    var imgHead = img
+      ? '<div class="trip-card-img img-frame overlay-bottom img-cover" style="background-image:url(\'' + img.image + '\')">' +
           '<span class="status-pill status-' + statusMeta.key + '">' + statusMeta.label + '</span>' +
-        '</div>' +
+          '<div class="trip-card-img-title"><h3>' + escapeHtml(trip.title || route) + '</h3><div class="route">' + escapeHtml(trip.origin || "") + ' → ' + escapeHtml(route) + '</div></div>' +
+        '</div>'
+      : '<div class="row1"><div><h3>' + escapeHtml(trip.title || route) + '</h3><div class="route">' + escapeHtml(trip.origin || "") + ' → ' + escapeHtml(route) + '</div></div>' +
+          '<span class="status-pill status-' + statusMeta.key + '">' + statusMeta.label + '</span></div>';
+    return (
+      '<div class="trip-card anim-rise" data-trip="' + trip.id + '">' +
+        imgHead +
+        '<div class="trip-card-body">' +
         '<div class="meta-row">' +
           '<span>' + fmtDate(trip.startDate) + ' – ' + fmtDate(trip.endDate) + '</span>' +
           '<span>' + nights + ' nights</span>' +
@@ -698,6 +718,7 @@
         '<div class="card-actions">' +
           '<button class="btn small" data-action="open-trip" data-trip="' + trip.id + '">Open</button>' +
           '<button class="btn small danger ghost" data-action="delete-trip" data-trip="' + trip.id + '">Delete</button>' +
+        '</div>' +
         '</div>' +
       '</div>'
     );
@@ -1420,6 +1441,11 @@
     targets[year] = amount;
     saveProfile({ annualBudgetTargets: targets });
   };
+  // Exposed so the bottom-of-page boot script can force one extra render
+  // once js/sojourn-plan.js has actually loaded — this block runs (and
+  // seeds demo trips) before that later <script src> executes, so the very
+  // first render(s) here can't yet resolve destination images for trip cards.
+  window.SojournTrips.render = render;
 
   // ---------------- Boot ----------------
   render();
@@ -1457,6 +1483,11 @@
 
   switchTo("plan");
   window.SojournNav = { switchTo: switchTo };
+
+  // All scripts have now loaded, including js/sojourn-plan.js (the source of
+  // destination imagery matching) — re-render My Trips once so its cards
+  // pick up images even when nothing has triggered a render since boot.
+  if (window.SojournTrips && window.SojournTrips.render) window.SojournTrips.render();
 })();
 </script>
 </body>

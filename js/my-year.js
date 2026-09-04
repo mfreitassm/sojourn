@@ -51,11 +51,8 @@
   // module's demo dataset, purely cosmetic — falls back cleanly if no match.
   function guessDestinationMeta(destLabel) {
     var P = window.SojournPlan;
-    if (!P || !destLabel) return null;
-    var lower = destLabel.toLowerCase();
-    return P.DESTINATIONS.filter(function (d) {
-      return lower.indexOf(d.name.toLowerCase()) > -1 || lower.indexOf(d.country.toLowerCase()) > -1;
-    })[0] || null;
+    if (!P || !destLabel || !P.matchDestination) return null;
+    return P.matchDestination(destLabel);
   }
 
   function tripCost(trip) {
@@ -100,10 +97,10 @@
     var isFuture = year > today.getFullYear();
     var tagline = isFuture ? "A year worth looking forward to." : (year === today.getFullYear() ? "Your travel year, at a glance." : "A year to look back on.");
     return (
-      '<section class="year-hero">' +
-        '<p class="year-eyebrow">MY YEAR</p>' +
-        '<h1 class="year-title">Your ' + year + '</h1>' +
-        '<p class="year-tagline">' + tagline + '</p>' +
+      '<section class="year-hero anim-rise">' +
+        '<p class="eyebrow">MY YEAR</p>' +
+        '<h1 class="display-xl">Your ' + year + '</h1>' +
+        '<p class="lead year-tagline">' + tagline + '</p>' +
         '<div class="year-selector">' +
           '<button type="button" class="year-arrow" data-action="year-prev" aria-label="Previous year">‹</button>' +
           [year - 1, year, year + 1].map(function (y) {
@@ -144,8 +141,8 @@
       '<section class="year-section">' +
         '<div class="year-plan-cta">' +
           '<div>' +
-            '<h3>✨ Plan my year</h3>' +
-            '<p>Tell Sojourn how you want to travel this year, and we\'ll help you shape the possibilities.</p>' +
+            '<p class="eyebrow">✨ Plan my year</p>' +
+            '<p class="lead">Tell Sojourn how you want to travel this year, and we\'ll help you shape the possibilities.</p>' +
           '</div>' +
           '<button class="btn primary" data-action="plan-my-year">Plan my year</button>' +
         '</div>' +
@@ -192,29 +189,25 @@
       var isPastMonth = year < today.getFullYear() || (isCurrentYear && i < currentMonth);
       var body;
       if (monthTrips.length) {
-        body = monthTrips.map(renderTripCard).join("");
+        body = monthTrips.map(function (t) { return renderTripMoment(t, label); }).join("");
       } else if (isPastMonth) {
-        body = '<div class="year-month-empty muted">—</div>';
+        body = '<div class="year-month-row muted"><span class="year-month-row-label">' + label + '</span><span class="year-month-row-dash">—</span></div>';
       } else {
         body = (
-          '<div class="year-month-empty">' +
-            '<p>This month is wide open ✨</p>' +
-            '<button type="button" class="btn small" data-action="find-getaway">Find me a getaway</button>' +
+          '<div class="year-month-row">' +
+            '<span class="year-month-row-label">' + label + '</span>' +
+            '<p class="year-month-row-copy">You\'ve got the whole month free. Let\'s put it somewhere beautiful.</p>' +
+            '<button type="button" class="btn small" data-action="find-getaway">Find my escape →</button>' +
           '</div>'
         );
       }
-      return (
-        '<div class="year-month">' +
-          '<div class="year-month-label">' + label + '</div>' +
-          '<div class="year-month-body">' + body + '</div>' +
-        '</div>'
-      );
+      return body;
     }).join("");
 
     return '<section class="year-section"><div class="year-timeline">' + months + '</div></section>';
   }
 
-  function renderTripCard(trip) {
+  function renderTripMoment(trip, monthLabel) {
     var meta = guessDestinationMeta(destLabel(trip));
     var nights = nightsBetween(trip.startDate, trip.endDate);
     var cost = tripCost(trip);
@@ -222,18 +215,16 @@
     var tags = (trip.priorities || []).slice(0, 3);
 
     return (
-      '<div class="year-trip-card" data-action="open-trip" data-id="' + trip.id + '">' +
-        (meta ? '<div class="year-trip-img" style="background-image:url(\'' + meta.image + '\')"></div>' : '<div class="year-trip-img placeholder"></div>') +
-        '<div class="year-trip-body">' +
-          '<div class="year-trip-top">' +
-            '<h4>' + (meta ? meta.emoji + " " : "") + escapeHtml(destLabel(trip)) + '</h4>' +
-            '<span class="status-pill ' + (STATUS_CLASS[statusKey] || "status-idea") + '">' + (STATUS_LABELS[statusKey] || "Idea") + '</span>' +
-          '</div>' +
-          '<p class="year-trip-dates">' + fmtRange(trip.startDate, trip.endDate) + (nights ? " · " + nights + " days" : "") + (trip.travelers ? " · " + trip.travelers + " traveller(s)" : "") + '</p>' +
-          (tags.length ? '<div class="chip-row">' + tags.map(function (t) { return '<span class="style-chip">' + escapeHtml(t) + '</span>'; }).join("") + '</div>' : "") +
-          '<div class="year-trip-bottom">' +
-            '<span class="year-trip-cost">' + (cost ? money(cost) : "Cost not entered") + '</span>' +
-            '<span class="year-trip-link">View trip →</span>' +
+      '<div class="year-moment img-frame xl overlay-full img-cover anim-rise" data-action="open-trip" data-id="' + trip.id + '"' +
+        (meta ? ' style="background-image:url(\'' + meta.image + '\')"' : ' style="background:linear-gradient(135deg, var(--accent-soft), var(--surface-2))"') + '>' +
+        '<span class="year-moment-month">' + monthLabel + '</span>' +
+        '<span class="status-pill ' + (STATUS_CLASS[statusKey] || "status-idea") + '">' + (STATUS_LABELS[statusKey] || "Idea") + '</span>' +
+        '<div class="year-moment-caption">' +
+          '<p class="eyebrow on-image">' + (meta ? meta.emoji + " " : "") + fmtRange(trip.startDate, trip.endDate) + (nights ? " · " + nights + " days" : "") + '</p>' +
+          '<h3 class="display-lg" style="color:#fff;">' + escapeHtml(destLabel(trip)) + '</h3>' +
+          '<div class="year-moment-bottom">' +
+            (tags.length ? '<div class="mood-row">' + tags.map(function (t) { return '<span class="mood-chip static on-image small">' + escapeHtml(t) + '</span>'; }).join("") + '</div>' : "<span></span>") +
+            '<span class="year-moment-cost">' + (cost ? money(cost) : "Cost not entered") + '</span>' +
           '</div>' +
         '</div>' +
       '</div>'

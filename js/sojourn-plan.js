@@ -109,9 +109,11 @@
       emoji: "🇮🇹",
       name: "Amalfi Coast",
       country: "Italy",
+      aliases: ["amalfi", "positano", "sorrento", "capri", "naples", "ravello"],
       image: "assets/images/amalfi-coast.jpg",
       tags: ["romantic", "food", "beach", "slow", "luxury", "culture", "coastal"],
       blurb: "Cliffside towns, lemon groves, and some of the most romantic coastline in Europe.",
+      poetic: "Slow mornings, long lunches and impossibly blue water.",
       matchLabel: "Romantic · Food · Beach · Slow",
       dayRate: { low: 180, mid: 320, high: 550 } // AUD per person per day, illustrative
     },
@@ -120,9 +122,11 @@
       emoji: "🇬🇷",
       name: "Greek Islands",
       country: "Greece",
+      aliases: ["santorini", "mykonos", "oia", "cyclades", "greek islands"],
       image: "assets/images/santorini.jpg",
       tags: ["romantic", "beach", "relaxed", "luxury", "coastal", "food"],
       blurb: "Whitewashed villages over the caldera, long lunches, and the best sunsets in the Aegean.",
+      poetic: "Whitewashed cliffs, blue domes and the best sunset on the map.",
       matchLabel: "Beach · Relaxed · Beautiful",
       dayRate: { low: 150, mid: 280, high: 480 }
     },
@@ -131,9 +135,11 @@
       emoji: "🇵🇹",
       name: "Portugal",
       country: "Portugal",
+      aliases: ["algarve", "lisbon", "porto", "lagos", "faro"],
       image: "assets/images/algarve-portugal.jpg",
       tags: ["food", "culture", "beach", "value", "coastal", "relaxed"],
       blurb: "Golden cliffs, incredible seafood, and Europe's best value for what you get.",
+      poetic: "Golden cliffs, grilled sardines, and a coastline that never gets old.",
       matchLabel: "Food · Culture · Beach · Value",
       dayRate: { low: 100, mid: 200, high: 350 }
     },
@@ -142,9 +148,11 @@
       emoji: "🇯🇵",
       name: "Kyoto & Kansai",
       country: "Japan",
+      aliases: ["kyoto", "osaka", "tokyo", "kansai", "japan", "nara"],
       image: "assets/images/kyoto.jpg",
       tags: ["culture", "food", "slow", "local", "history", "luxury"],
       blurb: "Temples, ryokans, and a food scene that rewards slowing down.",
+      poetic: "Quiet temples, lantern-lit streets, and food worth slowing down for.",
       matchLabel: "Culture · Food · Traditional",
       dayRate: { low: 140, mid: 260, high: 480 }
     },
@@ -153,13 +161,29 @@
       emoji: "🇮🇩",
       name: "Bali",
       country: "Indonesia",
+      aliases: ["bali", "ubud", "seminyak", "canggu", "uluwatu"],
       image: "assets/images/bali.jpg",
       tags: ["beach", "adventure", "value", "relaxed", "nature", "romantic"],
       blurb: "Rice terraces, surf, and villas that stretch a modest budget a long way.",
+      poetic: "Rice terraces, warm water, and villas that stretch every dollar.",
       matchLabel: "Beach · Adventure · Value",
       dayRate: { low: 70, mid: 150, high: 300 }
     }
   ];
+
+  // Shared fuzzy match so any part of the app (My Trips cards, My Year,
+  // Plan) can resolve a free-text destination label to curated imagery
+  // without re-implementing this — matches on name, country, or city alias.
+  function matchDestination(text) {
+    if (!text) return null;
+    var lower = String(text).toLowerCase();
+    var hit = DESTINATIONS.filter(function (d) {
+      if (lower.indexOf(d.name.toLowerCase()) > -1) return true;
+      if (lower.indexOf(d.country.toLowerCase()) > -1) return true;
+      return (d.aliases || []).some(function (a) { return lower.indexOf(a) > -1; });
+    })[0];
+    return hit || null;
+  }
 
   // Reusable activity templates per interest tag — combined into a day plan
   var ACTIVITY_BANK = {
@@ -474,6 +498,24 @@
       updated.travelStyle.unshift("slow travel");
       updated.days.forEach(function (d) { d.activities = d.activities.slice(0, 3); });
       message = "Thinned out each day to 3 activities max, so there's real time to slow down.";
+    } else if (/foodie|more food/.test(lower)) {
+      var fday = updated.days[Math.floor(updated.days.length / 2)] || updated.days[0];
+      if (fday && ACTIVITY_BANK.food[0]) {
+        var alreadyFood = fday.activities.some(function (a) { return /trattoria|cooking class/i.test(a.title); });
+        if (!alreadyFood) {
+          fday.activities.push(createActivity(Object.assign({}, ACTIVITY_BANK.food[0])));
+          fday.activities.sort(function (a, b) { return a.time.localeCompare(b.time); });
+          fday.estimatedCost += ACTIVITY_BANK.food[0].price;
+          updated.estimatedCost += ACTIVITY_BANK.food[0].price;
+        }
+      }
+      if (updated.travelStyle.indexOf("food") === -1) updated.travelStyle.unshift("food");
+      message = "Added another food-forward stop — this trip leans foodie now.";
+    } else if (/luxur/.test(lower)) {
+      var bump = Math.round(updated.estimatedCost * 0.18 / 10) * 10;
+      updated.estimatedCost += bump;
+      if (updated.travelStyle.indexOf("luxury") === -1) updated.travelStyle.unshift("luxury");
+      message = "Upgraded a few touches — nicer stays, nicer tables. About $" + bump.toLocaleString() + " more.";
     } else {
       message = "I can currently act on: “more romantic”, “cheaper”, “add a beach”, or “slow it down” — try one of those, or use the chips below.";
       return { trip: trip, message: message, changed: false, before: before, after: before };
@@ -510,6 +552,7 @@
   window.SojournPlan.DESTINATIONS = DESTINATIONS;
   window.SojournPlan.AI = AI;
   window.SojournPlan.ImageService = ImageService;
+  window.SojournPlan.matchDestination = matchDestination;
   window.SojournPlan.createVoiceService = createVoiceService;
   window.SojournPlan.models = { createTravelPreferences: createTravelPreferences, createTrip: createTrip, createTripDay: createTripDay, createActivity: createActivity };
 })();
