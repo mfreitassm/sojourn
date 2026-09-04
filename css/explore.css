@@ -1,0 +1,31 @@
+/* Explore — the browsable home/entry point. Same editorial language as
+   Plan/My Year (design-system.css tokens + components), just laid out as
+   a destination gallery instead of a conversation or a calendar. */
+
+#explore-view { min-height: 80vh; }
+
+.explore-hero { max-width: 720px; margin: 0 auto; padding: 60px 24px 20px; text-align: center; }
+.explore-hero .lead { margin-top: 14px; }
+
+.explore-grid-wrap { max-width: 1080px; margin: 0 auto; padding: 24px 24px 10px; }
+.explore-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 22px; }
+
+.explore-card {
+  height: 380px; cursor: pointer;
+  transition: transform 0.3s var(--ease-premium), box-shadow 0.3s var(--ease-premium);
+  box-shadow: var(--shadow);
+  -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
+}
+.explore-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-float); }
+.explore-card-caption { position: absolute; left: 24px; right: 24px; bottom: 22px; z-index: 1; text-align: left; }
+.explore-card-caption .eyebrow { margin-bottom: 6px; }
+.explore-card-caption .display-lg { margin-bottom: 8px; }
+.explore-card-blurb { font-family: 'Fraunces', serif; font-style: italic; font-weight: 500; font-size: 14.5px; margin: 0; }
+
+.explore-cta { max-width: 720px; margin: 40px auto 90px; padding: 0 24px; text-align: center; }
+.explore-cta .lead { margin-bottom: 16px; }
+
+@media (max-width: 640px) {
+  .explore-hero { padding: 44px 20px 16px; }
+  .explore-card { height: 320px; }
+}

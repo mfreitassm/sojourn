@@ -139,6 +139,7 @@
 
 /* ---- destination reveal / discovery ---- */
 .destinations-view { max-width: 720px; margin: 0 auto; padding: 56px 24px 90px; text-align: center; }
+.destinations-view > .back-link, .trip-view > .back-link { display: block; width: fit-content; text-align: left; }
 .dest-reveal-media { height: min(56vh, 480px); margin-bottom: 26px; }
 .dest-reveal-caption { position: absolute; left: 30px; right: 30px; bottom: 26px; text-align: left; z-index: 1; }
 .dest-reveal-caption .eyebrow { margin-bottom: 8px; }

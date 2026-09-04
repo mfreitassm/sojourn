@@ -9,6 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/design-system.css">
+<link rel="stylesheet" href="css/explore.css">
 <link rel="stylesheet" href="css/plan.css">
 <link rel="stylesheet" href="css/my-year.css">
 <style>
@@ -257,8 +258,9 @@
 
 <nav class="app-nav">
   <div class="app-nav-inner">
-    <span class="app-nav-brand">Sojourn</span>
+    <button type="button" class="app-nav-brand" data-nav="explore" aria-label="Sojourn — home">Sojourn</button>
     <div class="app-nav-tabs">
+      <button type="button" class="app-nav-tab" data-nav="explore">Explore</button>
       <button type="button" class="app-nav-tab" data-nav="plan">Plan</button>
       <button type="button" class="app-nav-tab" data-nav="year">My Year</button>
       <button type="button" class="app-nav-tab" data-nav="trips">My Trips</button>
@@ -266,7 +268,11 @@
   </div>
 </nav>
 
-<div id="plan-view">
+<div id="explore-view">
+  <div id="explore-root"></div>
+</div>
+
+<div id="plan-view" style="display:none;">
   <div id="plan-root"></div>
 </div>
 
@@ -278,6 +284,13 @@
   <div id="root"></div>
   <div id="modal-root"></div>
 </div>
+
+<nav class="bottom-nav" aria-label="Primary">
+  <button type="button" class="bottom-nav-btn" data-nav="explore"><span class="bottom-nav-icon">⌂</span><span>Explore</span></button>
+  <button type="button" class="bottom-nav-btn" data-nav="plan"><span class="bottom-nav-icon">✨</span><span>Plan</span></button>
+  <button type="button" class="bottom-nav-btn" data-nav="year"><span class="bottom-nav-icon">◷</span><span>My Year</span></button>
+  <button type="button" class="bottom-nav-btn" data-nav="trips"><span class="bottom-nav-icon">♥</span><span>My Trips</span></button>
+</nav>
 
 <script>
 (function () {
@@ -328,6 +341,7 @@
     trips: [],
     view: "dashboard",       // dashboard | describeTrip | newTrip | editProfile | tripDetail
     activeTripId: null,
+    returnSection: "trips",  // where "← back" in the trip detail header goes: "trips" or "year"
     activeTab: "brief",      // brief | costs | checklist | links
     formLegs: null,          // working legs array while editing new trip
     formPriorities: null,
@@ -898,9 +912,12 @@
       STATUS_OPTIONS.map(function (s) { return '<option value="' + s.key + '"' + (trip.status === s.key ? " selected" : "") + '>' + s.label + '</option>'; }).join("") +
       '</select>';
 
+    var backLabel = state.returnSection === "year" ? "My Year" : "My Trips";
+
     return (
       '<div class="overlay" data-action="close-modal-bg">' +
         '<div class="panel" data-stop="1" style="max-width:760px;">' +
+          '<button type="button" class="back-link" data-action="close-modal">← ' + backLabel + '</button>' +
           '<div class="panel-head"><div><h2>' + escapeHtml(trip.title || "Trip") + '</h2>' +
             '<div style="font-size:13px; color:var(--ink-soft); margin-top:4px;">' + escapeHtml(trip.origin) + ' → ' + legs.map(function (l) { return l.city; }).join(" → ") + ' · ' + fmtDate(trip.startDate) + ' – ' + fmtDate(trip.endDate) + '</div></div>' +
             '<div style="display:flex; gap:8px; align-items:center;">' + statusSelect + '<button class="btn small" data-action="edit-trip">Edit</button><button class="btn ghost small" data-action="close-modal">✕</button></div>' +
@@ -965,6 +982,28 @@
     el.classList.toggle("mismatch", !!mismatch);
   }
 
+  // Opens a trip's detail view and (unless the router is driving this call)
+  // pushes a real #/trip/:id route so the browser's Back/Forward and a
+  // page refresh both land back on this exact trip. returnSection records
+  // where "← back" in the detail header should go (My Trips vs My Year),
+  // so the label matches how the user actually got here.
+  function openTripDetail(tripId, tab, opts) {
+    opts = opts || {};
+    var trip = state.trips.filter(function (t) { return t.id === tripId; })[0];
+    if (!trip) return false;
+    state.activeTripId = tripId;
+    state.view = "tripDetail";
+    state.activeTab = tab || "brief";
+    // The router re-invokes this (with skipNav) right after a real caller's
+    // nav push, just to sync display state from the resulting hashchange —
+    // that echo call has no returnSection of its own, so it must not clobber
+    // what the real caller set. Only overwrite when one is explicitly given.
+    state.returnSection = opts.returnSection || state.returnSection || "trips";
+    render();
+    if (!opts.skipNav && window.SojournNav) window.SojournNav.navigateToTrip(tripId, tab);
+    return true;
+  }
+
   function handleClick(e) {
     var action = e.currentTarget.getAttribute("data-action");
     if (!action) return;
@@ -994,10 +1033,7 @@
         render();
         break;
       case "open-trip":
-        state.activeTripId = e.currentTarget.getAttribute("data-trip");
-        state.view = "tripDetail";
-        state.activeTab = "brief";
-        render();
+        openTripDetail(e.currentTarget.getAttribute("data-trip"), null, { returnSection: "trips" });
         break;
       case "edit-trip":
         trip = state.trips.filter(function (t) { return t.id === state.activeTripId; })[0];
@@ -1025,6 +1061,8 @@
       case "close-modal":
       case "close-modal-bg":
         if (action === "close-modal-bg" && e.target !== e.currentTarget) return;
+        var wasTripDetail = state.view === "tripDetail";
+        var returnSection = state.returnSection;
         state.describeToken++;   // discard any in-flight AI parse for the modal we're closing
         state.describeLoading = false;
         state.editingTripId = null;
@@ -1032,6 +1070,10 @@
         state.view = "dashboard";
         state.activeTripId = null;
         render();
+        // A trip detail view has its own #/trip/:id route — closing it should
+        // land back on wherever "← back" pointed (My Trips or My Year), not
+        // leave a stale trip URL in the address bar.
+        if (wasTripDetail && window.SojournNav) window.SojournNav.switchTo(returnSection);
         break;
       case "save-profile":
         submitProfile();
@@ -1423,14 +1465,18 @@
   // Opens a specific trip's existing detail view (Brief/Costs/Checklist/
   // Suggestions) — this IS the existing "trip canvas" for this data; there
   // is no separate itinerary system for real My-Trips records to duplicate.
-  window.SojournTrips.openTrip = function (tripId) {
-    var trip = state.trips.filter(function (t) { return t.id === tripId; })[0];
-    if (!trip) return false;
-    state.activeTripId = tripId;
-    state.view = "tripDetail";
-    state.activeTab = "brief";
+  window.SojournTrips.openTrip = function (tripId, tab, opts) {
+    return openTripDetail(tripId, tab, opts);
+  };
+  // Lets the router close an open trip-detail modal when browser
+  // Back/Forward lands on a route with no trip id — otherwise the modal
+  // (rendered from local state, not the DOM the router controls) can be
+  // left open while the URL/section behind it has already moved on.
+  window.SojournTrips.closeTripDetailIfOpen = function () {
+    if (state.view !== "tripDetail") return;
+    state.view = "dashboard";
+    state.activeTripId = null;
     render();
-    return true;
   };
   window.SojournTrips.getAnnualBudgetTarget = function (year) {
     var targets = (state.profile && state.profile.annualBudgetTargets) || {};
@@ -1456,33 +1502,101 @@
 
 <script src="js/sojourn-plan.js"></script>
 <script src="js/plan-ui.js"></script>
+<script src="js/explore.js"></script>
 <script src="js/my-year.js"></script>
 <script>
 (function () {
   "use strict";
-  var tabs = document.querySelectorAll(".app-nav-tab");
+
+  // ---------------------------------------------------------------- shell
+  // A tiny hash router. Hash-based (not History API pushState) on purpose:
+  // this is a single static index.html with no server and no build step,
+  // deployed on GitHub Pages — a hash never reaches the server, so refresh,
+  // direct navigation, and deep links all just work with zero server config
+  // (no 404.html redirect trick needed). Browser back/forward work for free
+  // since every hash change is a normal history entry.
+
+  var activeButtons = document.querySelectorAll(".app-nav-tab, .bottom-nav-btn");
+  var clickTargets = document.querySelectorAll(".app-nav-tab, .bottom-nav-btn, .app-nav-brand");
   var views = {
+    explore: document.getElementById("explore-view"),
     plan: document.getElementById("plan-view"),
     year: document.getElementById("year-view"),
     trips: document.getElementById("trips-view")
   };
+  var SECTION_TO_SLUG = { explore: "explore", plan: "plan", year: "my-year", trips: "my-trips" };
+  var SLUG_TO_SECTION = { explore: "explore", plan: "plan", "my-year": "year", "my-trips": "trips" };
 
-  function switchTo(name) {
+  var currentSection = "explore";
+
+  function showSection(name) {
+    if (!views[name]) name = "explore";
+    currentSection = name;
     Object.keys(views).forEach(function (key) {
       views[key].style.display = key === name ? "" : "none";
     });
     if (name === "year" && window.SojournYear) window.SojournYear.render(); // pick up any trip changes since last visit
-    tabs.forEach(function (t) {
+    if (name === "explore" && window.SojournExplore) window.SojournExplore.render();
+    activeButtons.forEach(function (t) {
       t.classList.toggle("on", t.getAttribute("data-nav") === name);
     });
+    window.scrollTo(0, 0);
   }
 
-  tabs.forEach(function (t) {
-    t.addEventListener("click", function () { switchTo(t.getAttribute("data-nav")); });
-  });
+  // Parses "#/my-trips", "#/trip/abc123", "#/trip/abc123/costs", "" → a route.
+  function parseHash() {
+    var raw = location.hash.replace(/^#\/?/, "").replace(/\/$/, "");
+    var parts = raw ? raw.split("/") : [];
+    if (!parts.length) return { section: "explore" };
+    if (parts[0] === "trip" && parts[1]) return { section: "trips", tripId: parts[1], tab: parts[2] || null };
+    return { section: SLUG_TO_SECTION[parts[0]] || "explore" };
+  }
 
-  switchTo("plan");
-  window.SojournNav = { switchTo: switchTo };
+  function applyRoute() {
+    var route = parseHash();
+    showSection(route.section);
+    if (route.tripId && window.SojournTrips) {
+      window.SojournTrips.openTrip(route.tripId, route.tab, { skipNav: true });
+    } else if (window.SojournTrips && window.SojournTrips.closeTripDetailIfOpen) {
+      window.SojournTrips.closeTripDetailIfOpen();
+    }
+  }
+
+  // navigate() pushes a real history entry (so Back/Forward work) unless
+  // the hash is already there (avoids no-op duplicate entries).
+  function navigate(section) {
+    var slug = SECTION_TO_SLUG[section] || "explore";
+    var target = "#/" + slug;
+    if (location.hash === target) { applyRoute(); return; }
+    location.hash = target;
+  }
+  function navigateToTrip(tripId, tab) {
+    var target = "#/trip/" + tripId + (tab ? "/" + tab : "");
+    if (location.hash === target) { applyRoute(); return; }
+    location.hash = target;
+  }
+
+  clickTargets.forEach(function (t) {
+    t.addEventListener("click", function () { navigate(t.getAttribute("data-nav")); });
+  });
+  window.addEventListener("hashchange", applyRoute);
+
+  window.SojournNav = {
+    switchTo: navigate,          // kept for existing call sites (my-year.js, plan-ui.js, etc.)
+    navigateToTrip: navigateToTrip,
+    getSection: function () { return currentSection; }
+  };
+
+  applyRoute();
+
+  // Nav feels almost invisible at rest — over an immersive hero photo it
+  // should recede — and solidifies with a blur once the page scrolls.
+  var navEl = document.querySelector(".app-nav");
+  function syncNavScrolled() {
+    navEl.classList.toggle("scrolled", window.scrollY > 24);
+  }
+  window.addEventListener("scroll", syncNavScrolled, { passive: true });
+  syncNavScrolled();
 
   // All scripts have now loaded, including js/sojourn-plan.js (the source of
   // destination imagery matching) — re-render My Trips once so its cards

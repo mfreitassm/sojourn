@@ -255,7 +255,10 @@
         break;
       case "open-trip":
         var id = e.currentTarget.getAttribute("data-id");
-        if (window.SojournTrips.openTrip(id) && window.SojournNav) window.SojournNav.switchTo("trips");
+        // returnSection: "year" so the trip detail's "← back" link points
+        // here — the router's own navigateToTrip() handles switching the
+        // visible section, no separate switchTo() needed.
+        window.SojournTrips.openTrip(id, null, { returnSection: "year" });
         break;
       case "find-getaway":
         if (window.SojournNav) window.SojournNav.switchTo("plan");

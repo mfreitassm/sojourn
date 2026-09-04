@@ -27,8 +27,16 @@
       lastChangeMessage: null,
       loadingLabel: "",
       modifyInput: "",
-      errorMessage: null
+      errorMessage: null,
+      entryPoint: "plan"          // "plan" | "explore" — drives the back-link label deeper in the flow
     };
+  }
+
+  function backLink() {
+    if (state.entryPoint === "explore") {
+      return '<button type="button" class="back-link" data-action="back-to-explore">← Explore</button>';
+    }
+    return '<button type="button" class="back-link" data-action="back-to-plan-hero">← Plan</button>';
   }
 
   var state = freshState();
@@ -202,6 +210,7 @@
     var moreLeft = state.destinationOptions.length > 1;
     return (
       '<section class="destinations-view">' +
+        backLink() +
         '<div class="dest-reveal-media img-frame xl overlay-full img-cover anim-scale" style="background-image:url(\'' + d.image + '\')">' +
           '<div class="dest-reveal-caption">' +
             '<p class="eyebrow on-image">' + d.emoji + ' ' + escapeHtml(d.country.toUpperCase()) + '</p>' +
@@ -238,6 +247,7 @@
 
     return (
       '<section class="trip-view">' +
+        backLink() +
         compareBlock +
         '<div class="trip-hero img-frame xl overlay-full img-cover anim-scale" style="' + (destMeta.image ? "background-image:url('" + destMeta.image + "')" : "") + '">' +
           '<div class="trip-hero-caption">' +
@@ -471,6 +481,13 @@
         state.destinationIndex = (state.destinationIndex + 1) % state.destinationOptions.length;
         render();
         break;
+      case "back-to-plan-hero":
+        state.view = "hero";
+        render();
+        break;
+      case "back-to-explore":
+        if (window.SojournNav) window.SojournNav.switchTo("explore");
+        break;
       case "quick-modify":
         applyModification(e.currentTarget.getAttribute("data-text"));
         break;
@@ -504,12 +521,33 @@
     // jump straight into the conversational flow with a starting prompt,
     // reusing this same TravelAIService path rather than a separate one.
     startWithText: function (text) {
-      state = { view: "hero", inputText: "", prefs: null, destinationOptions: [], selectedDest: null, trip: null, previousTrip: null, lastChangeMessage: null, loadingLabel: "", modifyInput: "", errorMessage: null };
+      state = freshState();
       submitDescription(text);
     },
     resetToHero: function () {
-      state = { view: "hero", inputText: "", prefs: null, destinationOptions: [], selectedDest: null, trip: null, previousTrip: null, lastChangeMessage: null, loadingLabel: "", modifyInput: "", errorMessage: null };
+      state = freshState();
       render();
+    },
+    // Entry point for Explore: user already picked a destination visually,
+    // so skip straight to trip generation for it — same AI.generateTrip()
+    // path as the conversational flow, just with neutral default prefs.
+    startWithDestination: function (destId) {
+      state = freshState();
+      state.entryPoint = "explore";
+      var prefs = P.models.createTravelPreferences({ travellers: 2, duration: 7, pace: "balanced", interests: [], travelStyle: [], destination: destId });
+      state.prefs = prefs;
+      state.view = "generating";
+      state.loadingLabel = "";
+      render();
+      P.AI.generateTrip(prefs, destId).then(function (trip) {
+        setTimeout(function () {
+          state.trip = trip;
+          state.previousTrip = null;
+          state.lastChangeMessage = null;
+          state.view = "trip";
+          render();
+        }, 500);
+      });
     }
   };
 })();
