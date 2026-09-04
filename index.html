@@ -9,6 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,500;0,600;1,500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/plan.css">
+<link rel="stylesheet" href="css/my-year.css">
 <style>
   :root {
     --bg: #f5f3ee;
@@ -245,6 +246,7 @@
     <span class="app-nav-brand">Sojourn</span>
     <div class="app-nav-tabs">
       <button type="button" class="app-nav-tab" data-nav="plan">Plan</button>
+      <button type="button" class="app-nav-tab" data-nav="year">My Year</button>
       <button type="button" class="app-nav-tab" data-nav="trips">My Trips</button>
     </div>
   </div>
@@ -252,6 +254,10 @@
 
 <div id="plan-view">
   <div id="plan-root"></div>
+</div>
+
+<div id="year-view" style="display:none;">
+  <div id="year-root"></div>
 </div>
 
 <div id="trips-view" style="display:none;">
@@ -605,6 +611,12 @@
     root.innerHTML = renderTopbar() + renderBanner() + renderProfileStrip() + renderTripsSection();
     modalRoot.innerHTML = renderModal();
     wireEvents();
+    notifyTripsChanged();
+  }
+
+  var tripsChangeListeners = [];
+  function notifyTripsChanged() {
+    tripsChangeListeners.forEach(function (fn) { try { fn(); } catch (e) {} });
   }
 
   function renderBanner() {
@@ -1374,6 +1386,41 @@
   window.SojournTrips = window.SojournTrips || {};
   window.SojournTrips.importFromPlan = importFromPlan;
 
+  // ---------------- Bridge for My Year ----------------
+  // My Year reads real, dated trips from THIS system (not the Plan module's
+  // generated-itinerary trips, which don't carry calendar dates) — these are
+  // the trips with real startDate/endDate, costs, and status.
+  window.SojournTrips.getAllTrips = function () {
+    return state.trips.slice();
+  };
+  window.SojournTrips.getProfile = function () {
+    return state.profile || {};
+  };
+  window.SojournTrips.onChange = function (fn) {
+    if (typeof fn === "function") tripsChangeListeners.push(fn);
+  };
+  // Opens a specific trip's existing detail view (Brief/Costs/Checklist/
+  // Suggestions) — this IS the existing "trip canvas" for this data; there
+  // is no separate itinerary system for real My-Trips records to duplicate.
+  window.SojournTrips.openTrip = function (tripId) {
+    var trip = state.trips.filter(function (t) { return t.id === tripId; })[0];
+    if (!trip) return false;
+    state.activeTripId = tripId;
+    state.view = "tripDetail";
+    state.activeTab = "brief";
+    render();
+    return true;
+  };
+  window.SojournTrips.getAnnualBudgetTarget = function (year) {
+    var targets = (state.profile && state.profile.annualBudgetTargets) || {};
+    return targets[year] || 10000; // sensible default until the user sets their own
+  };
+  window.SojournTrips.setAnnualBudgetTarget = function (year, amount) {
+    var targets = Object.assign({}, (state.profile && state.profile.annualBudgetTargets) || {});
+    targets[year] = amount;
+    saveProfile({ annualBudgetTargets: targets });
+  };
+
   // ---------------- Boot ----------------
   render();
   initDb();
@@ -1383,16 +1430,22 @@
 
 <script src="js/sojourn-plan.js"></script>
 <script src="js/plan-ui.js"></script>
+<script src="js/my-year.js"></script>
 <script>
 (function () {
   "use strict";
   var tabs = document.querySelectorAll(".app-nav-tab");
-  var planView = document.getElementById("plan-view");
-  var tripsView = document.getElementById("trips-view");
+  var views = {
+    plan: document.getElementById("plan-view"),
+    year: document.getElementById("year-view"),
+    trips: document.getElementById("trips-view")
+  };
 
   function switchTo(name) {
-    planView.style.display = name === "plan" ? "" : "none";
-    tripsView.style.display = name === "trips" ? "" : "none";
+    Object.keys(views).forEach(function (key) {
+      views[key].style.display = key === name ? "" : "none";
+    });
+    if (name === "year" && window.SojournYear) window.SojournYear.render(); // pick up any trip changes since last visit
     tabs.forEach(function (t) {
       t.classList.toggle("on", t.getAttribute("data-nav") === name);
     });

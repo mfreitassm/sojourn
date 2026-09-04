@@ -403,5 +403,19 @@
   }
 
   render();
-  window.SojournPlanUI = { render: render, getState: function () { return state; } };
+  window.SojournPlanUI = {
+    render: render,
+    getState: function () { return state; },
+    // Entry point for other modules (e.g. My Year's "Plan my year" CTA) to
+    // jump straight into the conversational flow with a starting prompt,
+    // reusing this same TravelAIService path rather than a separate one.
+    startWithText: function (text) {
+      state = { view: "hero", inputText: "", prefs: null, destinationOptions: [], selectedDest: null, trip: null, previousTrip: null, lastChangeMessage: null, loadingLabel: "", modifyInput: "", errorMessage: null };
+      submitDescription(text);
+    },
+    resetToHero: function () {
+      state = { view: "hero", inputText: "", prefs: null, destinationOptions: [], selectedDest: null, trip: null, previousTrip: null, lastChangeMessage: null, loadingLabel: "", modifyInput: "", errorMessage: null };
+      render();
+    }
+  };
 })();
