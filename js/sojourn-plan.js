@@ -177,7 +177,7 @@
     ],
     culture: [
       { time: "10:00", icon: "🏛️", title: "Old town walking tour", duration: "2h", price: 45 },
-      { time: "15:00", icon: "⛩️", title: "Temple / heritage site visit", duration: "1.5h", price: 20 }
+      { time: "15:00", icon: "🏛️", title: "Historic landmark visit", duration: "1.5h", price: 20 }
     ],
     slow: [
       { time: "09:00", icon: "🌅", title: "Scenic morning, no agenda", duration: "2h", price: 0 },

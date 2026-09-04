@@ -67,7 +67,8 @@
     font-family: 'Fraunces', ui-serif, Georgia, "Iowan Old Style", serif;
     text-wrap: balance; font-weight: 600; letter-spacing: -0.01em; margin: 0;
   }
-  button { font: inherit; cursor: pointer; }
+  button { font: inherit; cursor: pointer; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+  .toggle-chip, .status-pill, .chip, .trip-card, .detail-tab { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
   input, select, textarea { font: inherit; color: inherit; }
   input:focus, select:focus, textarea:focus, button:focus-visible {
     outline: 2px solid var(--accent); outline-offset: 1px;
