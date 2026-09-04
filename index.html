@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,500;0,600;1,500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/plan.css">
 <style>
   :root {
     --bg: #f5f3ee;
@@ -238,9 +239,24 @@
 </head>
 <body>
 
-<div id="root"></div>
+<nav class="app-nav">
+  <div class="app-nav-inner">
+    <span class="app-nav-brand">Sojourn</span>
+    <div class="app-nav-tabs">
+      <button type="button" class="app-nav-tab" data-nav="plan">Plan</button>
+      <button type="button" class="app-nav-tab" data-nav="trips">My Trips</button>
+    </div>
+  </div>
+</nav>
 
-<div id="modal-root"></div>
+<div id="plan-view">
+  <div id="plan-root"></div>
+</div>
+
+<div id="trips-view" style="display:none;">
+  <div id="root"></div>
+  <div id="modal-root"></div>
+</div>
 
 <script>
 (function () {
@@ -1314,10 +1330,79 @@
     saveTrip(trip.id, { links: links });
   }
 
+  // ---------------- Bridge from the Plan (V2) experience ----------------
+  // Plan generates trips in its own shape (see js/sojourn-plan.js); this
+  // maps that into a real My-Trips record using the existing createTrip().
+  // Everything from Plan is Demo Mode content — the notes field says so
+  // explicitly, so it's never mistaken for a verified price once it lands
+  // here alongside real research-backed trips.
+  function importFromPlan(planTrip, prefs) {
+    var budgetStyle = "Mid-range comfort";
+    if ((planTrip.travelStyle || []).indexOf("luxury") > -1) budgetStyle = "Splurge on a few nights";
+    if ((planTrip.travelStyle || []).indexOf("value") > -1) budgetStyle = "Budget-conscious";
+
+    var priorityMap = { food: "Food-focused", culture: "Traditional / cultural sights", beach: "Nature & outdoors", nature: "Nature & outdoors", adventure: "Nature & outdoors", "slow travel": "Quiet / local vibe", relaxed: "Quiet / local vibe" };
+    var priorities = [];
+    (planTrip.travelStyle || []).forEach(function (s) {
+      var mapped = priorityMap[s];
+      if (mapped && priorities.indexOf(mapped) === -1) priorities.push(mapped);
+    });
+
+    var notes = "Imported from Sojourn Plan (Demo Mode) — " + planTrip.summary +
+      " Estimated cost (" + (planTrip.currency || "AUD") + " " + Math.round(planTrip.estimatedCost).toLocaleString() +
+      ") is a simulated demo figure, not a verified quote. Use the Research Brief tab to get real pricing.";
+
+    var data = {
+      title: planTrip.title || planTrip.destination,
+      origin: (state.profile && state.profile.homeCity) || "",
+      travelers: planTrip.travellers || 2,
+      needsFlights: true,
+      startDate: "",
+      endDate: "",
+      legs: [{ city: planTrip.destination, nights: (planTrip.days || []).length || 7 }],
+      budgetStyle: budgetStyle,
+      priorities: priorities,
+      notes: notes,
+      status: "idea",
+      costs: { currency: planTrip.currency || "AUD", flights: null, legCosts: [Math.round(planTrip.estimatedCost)] },
+      checklist: DEFAULT_CHECKLIST.map(function (c) { return { key: c.key, label: c.label, done: false, note: "" }; }),
+      links: []
+    };
+    createTrip(data);
+  }
+  window.SojournTrips = window.SojournTrips || {};
+  window.SojournTrips.importFromPlan = importFromPlan;
+
   // ---------------- Boot ----------------
   render();
   initDb();
   initSample();
+})();
+</script>
+
+<script src="js/sojourn-plan.js"></script>
+<script src="js/plan-ui.js"></script>
+<script>
+(function () {
+  "use strict";
+  var tabs = document.querySelectorAll(".app-nav-tab");
+  var planView = document.getElementById("plan-view");
+  var tripsView = document.getElementById("trips-view");
+
+  function switchTo(name) {
+    planView.style.display = name === "plan" ? "" : "none";
+    tripsView.style.display = name === "trips" ? "" : "none";
+    tabs.forEach(function (t) {
+      t.classList.toggle("on", t.getAttribute("data-nav") === name);
+    });
+  }
+
+  tabs.forEach(function (t) {
+    t.addEventListener("click", function () { switchTo(t.getAttribute("data-nav")); });
+  });
+
+  switchTo("plan");
+  window.SojournNav = { switchTo: switchTo };
 })();
 </script>
 </body>

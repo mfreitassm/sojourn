@@ -1,0 +1,47 @@
+[
+  {
+    "slug": "amalfi-coast",
+    "file": "amalfi-coast.jpg",
+    "title": "Costiera amalfitana -mix- 2019 by-RaBoe 027.jpg",
+    "artist": "\u00a9 Ra Boe / Wikipedia",
+    "license": "CC BY-SA 3.0 de",
+    "license_url": "https://creativecommons.org/licenses/by-sa/3.0/de/deed.en",
+    "source": "https://commons.wikimedia.org/wiki/File:Costiera_amalfitana_-mix-_2019_by-RaBoe_027.jpg"
+  },
+  {
+    "slug": "santorini",
+    "file": "santorini.jpg",
+    "title": "Oia Santorini sunset.jpg",
+    "artist": "Nemomagister",
+    "license": "CC BY-SA 4.0",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Oia_Santorini_sunset.jpg"
+  },
+  {
+    "slug": "algarve-portugal",
+    "file": "algarve-portugal.jpg",
+    "title": "Portugal - Algarve - Coast at sunset (25683034071).jpg",
+    "artist": "muffinn from Worcester, UK",
+    "license": "CC BY 2.0",
+    "license_url": "https://creativecommons.org/licenses/by/2.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Portugal_-_Algarve_-_Coast_at_sunset_(25683034071).jpg"
+  },
+  {
+    "slug": "kyoto",
+    "file": "kyoto.jpg",
+    "title": "Torii path with lantern at Fushimi Inari Taisha Shrine, Kyoto, Japan.jpg",
+    "artist": "Basile Morin",
+    "license": "CC BY-SA 4.0",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Torii_path_with_lantern_at_Fushimi_Inari_Taisha_Shrine,_Kyoto,_Japan.jpg"
+  },
+  {
+    "slug": "bali",
+    "file": "bali.jpg",
+    "title": "Rice terraces, Bali.jpg",
+    "artist": "Vyacheslav Argenberg",
+    "license": "CC BY 4.0",
+    "license_url": "https://creativecommons.org/licenses/by/4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Rice_terraces,_Bali.jpg"
+  }
+]
