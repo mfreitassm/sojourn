@@ -1,0 +1,1324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sojourn — Private Travel Planning</title>
+<meta name="description" content="Describe a trip and build a research-ready brief — tracked with cost, checklist, and status.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,500;0,600;1,500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f3ee;
+    --surface: #ffffff;
+    --surface-2: #ece7db;
+    --ink: #14181d;
+    --ink-soft: #6b6a60;
+    --border: #e1dcce;
+    --accent: #96723a;
+    --accent-soft: #f0e6d1;
+    --on-accent: #14181d;
+    --warm: #a8502f;
+    --warm-soft: #f5e4d8;
+    --good: #4b7a5d;
+    --good-soft: #e6efe8;
+    --warn: #8f5c17;
+    --warn-soft: #f6ecd4;
+    --neutral: #6e6a5f;
+    --neutral-soft: #e9e4d6;
+    --shadow: 0 1px 2px rgba(20,24,29,0.05), 0 10px 28px -14px rgba(20,24,29,0.22);
+    --radius: 10px;
+  }
+  :root:not([data-theme="light"]) {
+    @media (prefers-color-scheme: dark) {
+      --bg: #0f1216; --surface: #171b20; --surface-2: #1d232a;
+      --ink: #ede9de; --ink-soft: #9c978b; --border: #2b3038;
+      --accent: #c9a15c; --accent-soft: #2a2417;
+      --on-accent: #14181d;
+      --warm: #d98b5f; --warm-soft: #2e2019;
+      --good: #86b494; --good-soft: #1c2620;
+      --warn: #d6a24e; --warn-soft: #2b2416;
+      --neutral: #9a968a; --neutral-soft: #23262b;
+      --shadow: 0 1px 2px rgba(0,0,0,0.35), 0 12px 32px -14px rgba(0,0,0,0.6);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0f1216; --surface: #171b20; --surface-2: #1d232a;
+    --ink: #ede9de; --ink-soft: #9c978b; --border: #2b3038;
+    --accent: #c9a15c; --accent-soft: #2a2417;
+    --on-accent: #14181d;
+    --warm: #d98b5f; --warm-soft: #2e2019;
+    --good: #86b494; --good-soft: #1c2620;
+    --warn: #d6a24e; --warn-soft: #2b2416;
+    --neutral: #9a968a; --neutral-soft: #23262b;
+    --shadow: 0 1px 2px rgba(0,0,0,0.35), 0 12px 32px -14px rgba(0,0,0,0.6);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    border-top: 3px solid var(--accent);
+    font-family: 'Manrope', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5; -webkit-font-smoothing: antialiased;
+    font-variant-numeric: tabular-nums;
+  }
+  h1, h2, h3, .display {
+    font-family: 'Fraunces', ui-serif, Georgia, "Iowan Old Style", serif;
+    text-wrap: balance; font-weight: 600; letter-spacing: -0.01em; margin: 0;
+  }
+  button { font: inherit; cursor: pointer; }
+  input, select, textarea { font: inherit; color: inherit; }
+  input:focus, select:focus, textarea:focus, button:focus-visible {
+    outline: 2px solid var(--accent); outline-offset: 1px;
+  }
+  .wrap { max-width: 960px; margin: 0 auto; padding: 0 24px 100px; }
+
+  /* ---- top bar ---- */
+  .topbar {
+    padding: 40px 0 22px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+  }
+  .topbar .eyebrow { text-transform: uppercase; letter-spacing: 0.16em; font-size: 11px; font-weight: 700; color: var(--accent); margin-bottom: 10px; }
+  .topbar h1 {
+    font-size: 34px; font-style: italic; font-weight: 500; letter-spacing: -0.01em;
+  }
+  .topbar .actions { display: flex; gap: 8px; }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px; border-radius: 8px;
+    padding: 9px 15px; font-size: 13.5px; font-weight: 600; border: 1px solid var(--border);
+    background: var(--surface); color: var(--ink); transition: border-color 0.15s ease;
+  }
+  .btn:hover { border-color: var(--accent); }
+  .btn.primary { background: var(--accent); color: var(--on-accent); border-color: var(--accent); font-weight: 700; }
+  .btn.primary:hover { opacity: 0.9; }
+  .btn.ghost { border-color: transparent; background: transparent; }
+  .btn.ghost:hover { background: var(--surface-2); }
+  .btn.danger { color: var(--warm); }
+  .btn.small { padding: 6px 11px; font-size: 12.5px; }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .banner {
+    margin: 20px 0 0; padding: 12px 16px; border-radius: var(--radius); font-size: 13px;
+    background: var(--warn-soft); color: var(--warn); border: 1px solid var(--warn);
+  }
+
+  /* ---- profile strip ---- */
+  .profile-strip {
+    margin-top: 24px; background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 18px 22px; box-shadow: var(--shadow);
+    display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+  }
+  .profile-strip .pf-main { display: flex; gap: 26px; flex-wrap: wrap; font-size: 13.5px; }
+  .profile-strip .pf-item .k { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-soft); margin-bottom: 3px; }
+  .profile-strip .pf-item .v { font-weight: 700; }
+  .chip-row { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip {
+    font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 20px;
+    background: var(--accent-soft); color: var(--accent);
+  }
+
+  /* ---- trip grid ---- */
+  section.trips { padding: 48px 0 8px; }
+  .section-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+  .section-head h2 { font-size: 23px; }
+  .empty-state { padding: 64px 20px; text-align: center; color: var(--ink-soft); border: 1px dashed var(--border); border-radius: var(--radius); }
+  .empty-state .btn { margin-top: 14px; }
+
+  .trip-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 18px; }
+  .trip-card {
+    text-align: left; background: var(--surface); border: 1px solid var(--border); border-top: 2px solid var(--accent);
+    border-radius: var(--radius); padding: 20px 22px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 11px;
+    transition: box-shadow 0.15s ease, transform 0.15s ease;
+  }
+  .trip-card:hover { box-shadow: 0 1px 2px rgba(20,24,29,0.06), 0 16px 34px -14px rgba(20,24,29,0.32); transform: translateY(-1px); }
+  .trip-card .row1 { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+  .trip-card h3 { font-size: 18px; }
+  .trip-card .route { font-size: 12px; color: var(--ink-soft); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.04em; }
+  .status-pill { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; padding: 4px 10px; border-radius: 20px; white-space: nowrap; }
+  .status-idea { background: var(--neutral-soft); color: var(--neutral); }
+  .status-researching { background: var(--accent-soft); color: var(--accent); }
+  .status-ready { background: var(--warn-soft); color: var(--warn); }
+  .status-booked { background: var(--good-soft); color: var(--good); }
+  .trip-card .meta-row { display: flex; gap: 14px; font-size: 12.5px; color: var(--ink-soft); flex-wrap: wrap; }
+  .trip-card .cost { font-size: 21px; font-weight: 700; font-variant-numeric: tabular-nums; margin-top: 2px; font-family: 'Fraunces', serif; }
+  .trip-card .cost small { font-size: 12px; font-weight: 500; color: var(--ink-soft); font-family: 'Manrope', sans-serif; }
+  .trip-card .checklist-progress { font-size: 11.5px; color: var(--ink-soft); }
+  .progress-bar { height: 4px; border-radius: 4px; background: var(--surface-2); overflow: hidden; margin-top: 5px; }
+  .progress-bar > div { height: 100%; background: var(--good); }
+  .trip-card .card-actions { margin-top: auto; display: flex; gap: 8px; padding-top: 8px; }
+
+  /* ---- modal/panel ---- */
+  .overlay {
+    position: fixed; inset: 0; background: rgba(15,18,22,0.55); backdrop-filter: blur(3px);
+    display: flex; align-items: flex-start; justify-content: center; padding: 40px 20px; z-index: 50; overflow-y: auto;
+  }
+  .panel {
+    background: var(--surface); border-radius: 14px; border: 1px solid var(--border);
+    max-width: 720px; width: 100%; padding: 30px 32px 34px; box-shadow: var(--shadow); margin-bottom: 40px;
+  }
+  .panel-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 22px; gap: 12px; }
+  .panel-head h2 { font-size: 23px; }
+  .field { margin-bottom: 17px; }
+  .field label { display: block; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-soft); margin-bottom: 7px; }
+  .field input[type=text], .field input[type=number], .field input[type=date], .field select, .field textarea {
+    width: 100%; padding: 10px 13px; border-radius: 8px; border: 1px solid var(--border);
+    background: var(--bg); color: var(--ink); font-size: 14px;
+  }
+  .field textarea { resize: vertical; min-height: 64px; }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .field-row.three { grid-template-columns: 2fr 1fr auto; align-items: end; }
+  .toggle-group { display: flex; flex-wrap: wrap; gap: 8px; }
+  .toggle-chip {
+    border: 1px solid var(--border); background: var(--surface); border-radius: 20px;
+    padding: 7px 14px; font-size: 12.5px; font-weight: 600; color: var(--ink-soft);
+  }
+  .toggle-chip.on { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+  .checkbox-field { display: flex; align-items: center; gap: 8px; }
+  .checkbox-field input { width: 16px; height: 16px; accent-color: var(--accent); }
+  .checkbox-field label { text-transform: none; font-size: 14px; font-weight: 500; color: var(--ink); margin: 0; }
+
+  .leg-row { display: grid; grid-template-columns: 1fr 90px auto; gap: 10px; align-items: center; margin-bottom: 8px; }
+  .legs-total { font-size: 12.5px; color: var(--ink-soft); margin-top: 6px; }
+  .legs-total.mismatch { color: var(--warm); font-weight: 600; }
+
+  .panel-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border); }
+
+  /* ---- describe-trip (AI intake) ---- */
+  .describe-box {
+    width: 100%; min-height: 116px; padding: 15px 17px; border-radius: 10px;
+    border: 1px solid var(--border); background: var(--bg); color: var(--ink);
+    font-size: 15.5px; line-height: 1.55; resize: vertical;
+  }
+  .describe-box:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  .describe-hint { font-size: 12.5px; color: var(--ink-soft); margin-top: 8px; }
+  .describe-loading { display: flex; align-items: center; gap: 10px; padding: 16px 2px; font-size: 14px; color: var(--ink-soft); }
+  .spinner { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--border); border-top-color: var(--accent); animation: spin 0.8s linear infinite; }
+  @media (prefers-reduced-motion: reduce) { .spinner { animation-duration: 2.4s; } }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .describe-error { margin-top: 14px; padding: 10px 14px; border-radius: var(--radius); background: var(--warn-soft); color: var(--warn); font-size: 13px; }
+  .manual-link { display: inline-block; margin-top: 14px; font-size: 13px; color: var(--ink-soft); text-decoration: underline; background: none; border: none; padding: 0; }
+  .manual-link:hover { color: var(--accent); }
+
+  .describe-input-row { position: relative; }
+  .voice-hint { font-size: 12px; color: var(--ink-soft); margin-top: 6px; }
+
+  /* ---- trip detail ---- */
+  .detail-tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin-bottom: 22px; }
+  .detail-tab { padding: 9px 4px; margin-right: 20px; font-size: 13px; font-weight: 700; color: var(--ink-soft); border-bottom: 2px solid transparent; text-transform: uppercase; letter-spacing: 0.03em; }
+  .detail-tab.on { color: var(--accent); border-bottom-color: var(--accent); }
+
+  .brief-box {
+    background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 16px 18px; font-size: 13px; white-space: pre-wrap; font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    line-height: 1.6; color: var(--ink);
+  }
+
+  table.cost-tbl { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  table.cost-tbl td { padding: 9px 4px; border-bottom: 1px solid var(--border); }
+  table.cost-tbl td.num input { width: 110px; text-align: right; }
+  table.cost-tbl tr.total td { font-weight: 700; border-bottom: none; padding-top: 14px; }
+  table.cost-tbl tr.total td.num { font-size: 18px; font-family: 'Fraunces', serif; }
+
+  .check-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .check-item:last-child { border-bottom: none; }
+  .check-item input[type=checkbox] { margin-top: 3px; width: 16px; height: 16px; accent-color: var(--good); }
+  .check-item .label { font-size: 14px; font-weight: 500; }
+  .check-item.done .label { text-decoration: line-through; color: var(--ink-soft); }
+  .check-item .note-input { width: 100%; margin-top: 5px; font-size: 12.5px; padding: 6px 9px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg); }
+  .add-check-row { display: flex; gap: 8px; margin-top: 14px; }
+  .add-check-row input { flex: 1; }
+
+  .link-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+  .link-row a { flex: 1; font-size: 13px; color: var(--accent); text-decoration: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .link-row a:hover { text-decoration: underline; }
+
+  footer.app-footer { padding: 34px 0 56px; color: var(--ink-soft); font-size: 12px; text-align: center; letter-spacing: 0.02em; }
+</style>
+</head>
+<body>
+
+<div id="root"></div>
+
+<div id="modal-root"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  var DEFAULT_CHECKLIST = [
+    { key: "transport", label: "Getting there & around (flights / trains / rental car)" },
+    { key: "tickets", label: "Attraction tickets that sell out in advance" },
+    { key: "localpass", label: "Local transport passes / transit cards" },
+    { key: "visa", label: "Visa requirements" },
+    { key: "sim", label: "SIM / eSIM or pocket wifi" },
+    { key: "cash", label: "Cash & currency plan" },
+    { key: "luggage", label: "Luggage forwarding / storage" },
+    { key: "insurance", label: "Travel insurance" },
+    { key: "reservations", label: "Restaurant / activity reservations" }
+  ];
+
+  var BUDGET_OPTIONS = [
+    "Budget-conscious",
+    "Mid-range comfort",
+    "Splurge on a few nights",
+    "Show me a spread"
+  ];
+
+  var PRIORITY_OPTIONS = [
+    "Convenient & central",
+    "Shopping & nightlife",
+    "Traditional / cultural sights",
+    "Quiet / local vibe",
+    "Nature & outdoors",
+    "Food-focused"
+  ];
+
+  var STATUS_OPTIONS = [
+    { key: "idea", label: "Idea" },
+    { key: "researching", label: "Researching" },
+    { key: "ready", label: "Ready to book" },
+    { key: "booked", label: "Booked" }
+  ];
+
+  var root = document.getElementById("root");
+  var modalRoot = document.getElementById("modal-root");
+
+  var state = {
+    dbReady: false,
+    dbOffline: false,
+    profile: null,
+    trips: [],
+    view: "dashboard",       // dashboard | describeTrip | newTrip | editProfile | tripDetail
+    activeTripId: null,
+    activeTab: "brief",      // brief | costs | checklist | links
+    formLegs: null,          // working legs array while editing new trip
+    formPriorities: null,
+    formPrefill: null,       // fields parsed from free text, prefilled into the confirm form
+    editingTripId: null,     // set while the new-trip form is being reused to edit an existing trip
+    describeLoading: false,
+    describeError: null,
+    describeToken: 0          // bumped whenever the describe modal closes/reopens, to discard late AI responses
+  };
+
+  var db = null;
+  var sampleApi = null;     // null until claude.use("sample") resolves; stays null if unavailable
+  var memTrips = {};   // fallback in-memory store if db unavailable
+  var memProfile = null;
+  // Voice input was tried via the browser's Web Speech API, but this sandboxed frame
+  // doesn't grant microphone permission through it (confirmed: "not-allowed"). There's no
+  // Anthropic capability for mic access as of this build, so voice input isn't offered
+  // in-page — the describe box just points people at their device's own keyboard dictation
+  // instead, which works on any text field regardless of page permissions.
+
+  function uid() {
+    return "t" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+  }
+
+  function escapeHtml(s) {
+    if (s === null || s === undefined) return "";
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+
+  function fmtDate(iso) {
+    if (!iso) return "";
+    var d = new Date(iso + "T00:00:00");
+    if (isNaN(d.getTime())) return iso;
+    return d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+  }
+
+  function nightsBetween(start, end) {
+    if (!start || !end) return 0;
+    var a = new Date(start + "T00:00:00");
+    var b = new Date(end + "T00:00:00");
+    var diff = Math.round((b - a) / 86400000);
+    return diff > 0 ? diff : 0;
+  }
+
+  function legsTotalNights(legs) {
+    return (legs || []).reduce(function (sum, l) { return sum + (Number(l.nights) || 0); }, 0);
+  }
+
+  function tripAccommodationTotal(trip) {
+    var costs = trip.costs || {};
+    var legCosts = costs.legCosts || [];
+    return legCosts.reduce(function (sum, v) { return sum + (Number(v) || 0); }, 0);
+  }
+
+  function tripGrandTotal(trip) {
+    var costs = trip.costs || {};
+    return (Number(costs.flights) || 0) + tripAccommodationTotal(trip);
+  }
+
+  function checklistProgress(trip) {
+    var items = trip.checklist || [];
+    if (!items.length) return { done: 0, total: 0 };
+    var done = items.filter(function (i) { return i.done; }).length;
+    return { done: done, total: items.length };
+  }
+
+  function generateBrief(trip, profile) {
+    var legs = trip.legs || [];
+    var dest = legs.map(function (l) { return l.city; }).join(" / ");
+    var breakdown = legs.map(function (l) { return l.city + " (" + l.nights + "n)"; }).join(", ");
+    var nights = legsTotalNights(legs);
+    var lines = [];
+    lines.push("Plan a trip for " + (trip.travelers || 1) + " traveler(s) from " + (trip.origin || "?") + " to " + (dest || "?") + ".");
+    lines.push("Dates: " + (trip.startDate ? fmtDate(trip.startDate) : "?") + " – " + (trip.endDate ? fmtDate(trip.endDate) : "?") + " (" + nights + " nights total).");
+    if (legs.length > 1) lines.push("City breakdown: " + breakdown + ".");
+    lines.push("Budget style: " + (trip.budgetStyle || "not specified") + ".");
+    var priorities = (trip.priorities && trip.priorities.length) ? trip.priorities : (profile && profile.priorities) || [];
+    if (priorities.length) lines.push("Priorities: " + priorities.join(", ") + ".");
+    if (trip.notes) lines.push("Notes: " + trip.notes);
+    if (profile && profile.notes) lines.push("Standing preferences: " + profile.notes);
+    lines.push("");
+    if (trip.needsFlights === false) {
+      lines.push("No flights needed — this is a drive/regional trip. Please research accommodation (and any specific place suggestions) using the trip-planner skill.");
+    } else {
+      lines.push("Please research flights and accommodation for this trip using the trip-planner skill.");
+    }
+    lines.push("For every suggestion, give me three tiers to actually compare — Budget, Luxury, and Best value (cost-benefit) — not just one recommendation. For each option include: a real booking/info link, its guest rating and review count, and a one-line reason it's in that tier. Flag anything with very few reviews, poor cancellation terms, or other red flags.");
+    return lines.join("\n");
+  }
+
+  // ---------------- DB layer ----------------
+
+  function saveProfile(patch) {
+    if (state.dbOffline) {
+      memProfile = Object.assign({}, memProfile, patch, { updatedAt: new Date().toISOString() });
+      state.profile = memProfile;
+      render();
+      return;
+    }
+    var ref = db.doc("profile/main");
+    ref.get().then(function (snap) {
+      var body = Object.assign({}, snap.exists ? snap.data() : {}, patch, { updatedAt: new Date().toISOString() });
+      return ref.set(body);
+    });
+  }
+
+  function saveTrip(id, patch) {
+    if (state.dbOffline) {
+      memTrips[id] = Object.assign({}, memTrips[id], patch, { updatedAt: new Date().toISOString() });
+      state.trips = Object.keys(memTrips).map(function (k) { return memTrips[k]; });
+      render();
+      return;
+    }
+    db.doc("trips/" + id).update(Object.assign({}, patch, { updatedAt: new Date().toISOString() }))
+      .catch(function () {
+        // doc might not exist yet on a race; fall back to set
+        db.doc("trips/" + id).set(Object.assign({ id: id }, patch, { updatedAt: new Date().toISOString() }));
+      });
+  }
+
+  function createTrip(data) {
+    var id = uid();
+    var body = Object.assign({ id: id, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }, data);
+    if (state.dbOffline) {
+      memTrips[id] = body;
+      state.trips = Object.keys(memTrips).map(function (k) { return memTrips[k]; });
+      render();
+      return id;
+    }
+    db.doc("trips/" + id).set(body);
+    return id;
+  }
+
+  function deleteTrip(id) {
+    if (state.dbOffline) {
+      delete memTrips[id];
+      state.trips = Object.keys(memTrips).map(function (k) { return memTrips[k]; });
+      render();
+      return;
+    }
+    db.doc("trips/" + id).delete();
+  }
+
+  function seedIfEmpty() {
+    var japanId = "japan-2026-seed";
+    var seedTrip = {
+      id: japanId,
+      title: "Japan — Tokyo / Kyoto / Osaka",
+      origin: "Sydney",
+      status: "researching",
+      needsFlights: true,
+      startDate: "2026-10-19",
+      endDate: "2026-11-02",
+      travelers: 2,
+      legs: [
+        { city: "Tokyo", nights: 5 },
+        { city: "Kyoto", nights: 5 },
+        { city: "Osaka", nights: 4 }
+      ],
+      budgetStyle: "Splurge on a few nights",
+      priorities: ["Convenient & central", "Shopping & nightlife"],
+      notes: "",
+      costs: {
+        currency: "AUD",
+        flights: 2540,
+        legCosts: [988, 945, 1338]
+      },
+      checklist: DEFAULT_CHECKLIST.map(function (c) { return { key: c.key, label: c.label, done: false, note: "" }; }),
+      links: [
+        { label: "Accommodation comparison report", url: "https://claude.ai/code/artifact/fa4e58af-eed2-4c5a-8f16-598ee7f87fa7", note: "" },
+        { label: "Trip cost summary", url: "https://claude.ai/code/artifact/40600217-539d-471e-aa67-67a5edf44c48", note: "" }
+      ],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    var seedProfile = {
+      homeCity: "Sydney",
+      defaultTravelers: 2,
+      budgetStyle: "Splurge on a few nights",
+      priorities: ["Convenient & central", "Shopping & nightlife"],
+      notes: "",
+      updatedAt: new Date().toISOString()
+    };
+
+    if (state.dbOffline) {
+      memTrips[japanId] = seedTrip;
+      memProfile = seedProfile;
+      state.trips = [seedTrip];
+      state.profile = seedProfile;
+      render();
+      return;
+    }
+
+    db.collection("trips").limit(1).get().then(function (snap) {
+      if (snap.empty) {
+        db.doc("trips/" + japanId).set(seedTrip);
+      }
+    });
+    db.doc("profile/main").get().then(function (snap) {
+      if (!snap.exists) {
+        db.doc("profile/main").set(seedProfile);
+      }
+    });
+  }
+
+  // Adds the NSW getaway as a second example trip, once — checked by its own doc id
+  // rather than "collection is empty" (seedIfEmpty's check), since by the time this
+  // was added the Japan trip likely already exists and shouldn't block this one.
+  function seedNswGetawayIfMissing() {
+    var nswId = "nsw-getaway-seed";
+    var seedTrip = {
+      id: nswId,
+      title: "Regional NSW Getaway — Spa & Cabin",
+      origin: "Sydney",
+      status: "idea",
+      needsFlights: false,
+      startDate: "",
+      endDate: "",
+      travelers: 2,
+      legs: [{ city: "Kangaroo Valley", nights: 2 }],
+      budgetStyle: "Mid-range comfort",
+      priorities: ["Nature & outdoors", "Quiet / local vibe"],
+      notes: "No flights needed — regional NSW drive trip (~2hrs from Sydney). Dates not chosen yet, flexible weekend.\n\nTop pick: Kangaroo Valley Bush Retreat (Southern Highlands) — private eco-cabins each with their own outdoor spa bath, the most literal \"cabin + spa in one\" match.\n\nAlternatives: Lilianfels Resort & Spa or a Megalong Valley spa cottage (Blue Mountains, ~1.5hrs, closest); Elysia Wellness Retreat or Spicers Vineyards Estate (Hunter Valley, ~2hrs, wine country, more of a splurge).",
+      costs: { currency: "AUD", flights: null, legCosts: [null] },
+      checklist: DEFAULT_CHECKLIST.map(function (c) { return { key: c.key, label: c.label, done: false, note: "" }; }),
+      links: [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    if (state.dbOffline) {
+      if (!memTrips[nswId]) {
+        memTrips[nswId] = seedTrip;
+        state.trips = Object.keys(memTrips).map(function (k) { return memTrips[k]; });
+        render();
+      }
+      return;
+    }
+    db.doc("trips/" + nswId).get().then(function (snap) {
+      if (!snap.exists) {
+        db.doc("trips/" + nswId).set(seedTrip);
+      } else if (snap.data().needsFlights === undefined) {
+        // backfills a copy created before the "needs flights" field existed
+        db.doc("trips/" + nswId).update({ needsFlights: false });
+      }
+    });
+  }
+
+  function initDb() {
+    if (!window.claude || !window.claude.use) {
+      goOffline();
+      return;
+    }
+    window.claude.use("db").then(function (namespace) {
+      if (!namespace) { goOffline(); return; }
+      db = namespace;
+      state.dbReady = true;
+      seedIfEmpty();
+      seedNswGetawayIfMissing();
+      db.doc("profile/main").onSnapshot(function (snap) {
+        state.profile = snap.exists ? snap.data() : null;
+        render();
+      }, function () { goOffline(); });
+      db.collection("trips").onSnapshot(function (qsnap) {
+        state.trips = qsnap.docs.map(function (d) { return d.data(); });
+        render();
+      }, function () { goOffline(); });
+    }).catch(function () { goOffline(); });
+
+    // fallback: if db never resolves, drop to offline after a timeout
+    setTimeout(function () {
+      if (!state.dbReady) goOffline();
+    }, 11000);
+  }
+
+  function goOffline() {
+    if (state.dbReady) return; // already connected fine, ignore late timeout
+    state.dbOffline = true;
+    seedIfEmpty();
+    seedNswGetawayIfMissing();
+    render();
+  }
+
+  function initSample() {
+    if (!window.claude || !window.claude.use) return;
+    window.claude.use("sample").then(function (fn) {
+      sampleApi = fn || null; // null: this view can't sample — the "describe your trip" box degrades to a plain note field
+    }).catch(function () { sampleApi = null; });
+  }
+
+  // ---------------- Rendering ----------------
+
+  function render() {
+    root.innerHTML = renderTopbar() + renderBanner() + renderProfileStrip() + renderTripsSection();
+    modalRoot.innerHTML = renderModal();
+    wireEvents();
+  }
+
+  function renderBanner() {
+    if (!state.dbOffline) return "";
+    return '<div class="wrap"><div class="banner">Live sync isn’t available in this preview, so nothing you enter here will be saved or show up on another device. Open this page from claude.ai to enable saving.</div></div>';
+  }
+
+  function renderTopbar() {
+    return (
+      '<div class="wrap"><div class="topbar">' +
+        '<div><div class="eyebrow">Private travel planning</div><h1>Sojourn</h1></div>' +
+        '<div class="actions">' +
+          '<button class="btn" data-action="edit-profile">Edit profile</button>' +
+          '<button class="btn primary" data-action="new-trip">+ Plan a trip</button>' +
+        '</div>' +
+      '</div></div>'
+    );
+  }
+
+  function renderProfileStrip() {
+    var p = state.profile || {};
+    var priorities = p.priorities || [];
+    if (!p.homeCity) {
+      return (
+        '<div class="wrap"><div class="profile-strip">' +
+          '<div style="font-size:13.5px; color:var(--ink-soft);">New here — add your home city and how you usually like to travel, and every trip you plan will start from there instead of a blank form.</div>' +
+          '<button class="btn small" data-action="edit-profile">Set up profile</button>' +
+        '</div></div>'
+      );
+    }
+    return (
+      '<div class="wrap"><div class="profile-strip">' +
+        '<div class="pf-main">' +
+          '<div class="pf-item"><div class="k">Home</div><div class="v">' + escapeHtml(p.homeCity || "—") + '</div></div>' +
+          '<div class="pf-item"><div class="k">Usual party</div><div class="v">' + escapeHtml(p.defaultTravelers || "—") + ' traveler(s)</div></div>' +
+          '<div class="pf-item"><div class="k">Budget style</div><div class="v">' + escapeHtml(p.budgetStyle || "—") + '</div></div>' +
+        '</div>' +
+        '<div class="chip-row">' + priorities.map(function (pr) { return '<span class="chip">' + escapeHtml(pr) + '</span>'; }).join("") + '</div>' +
+      '</div></div>'
+    );
+  }
+
+  function renderTripsSection() {
+    var trips = state.trips.slice().sort(function (a, b) {
+      return (a.startDate || "").localeCompare(b.startDate || "");
+    });
+    var body;
+    if (!trips.length) {
+      body = '<div class="empty-state"><div>No trips yet — describe one and I\'ll turn it into a research-ready brief for flights and accommodation.</div>' +
+        '<button class="btn primary" data-action="new-trip">+ Plan a trip</button></div>';
+    } else {
+      body = '<div class="trip-grid">' + trips.map(renderTripCard).join("") + '</div>';
+    }
+    return '<div class="wrap"><section class="trips"><div class="section-head"><h2>' + trips.length + ' trip' + (trips.length === 1 ? "" : "s") + '</h2></div>' + body + '</section></div>';
+  }
+
+  function renderTripCard(trip) {
+    var legs = trip.legs || [];
+    var route = legs.map(function (l) { return l.city; }).join(" → ") || "—";
+    var nights = legsTotalNights(legs);
+    var total = tripGrandTotal(trip);
+    var currency = (trip.costs && trip.costs.currency) || "AUD";
+    var statusMeta = STATUS_OPTIONS.filter(function (s) { return s.key === trip.status; })[0] || STATUS_OPTIONS[0];
+    var prog = checklistProgress(trip);
+    var pct = prog.total ? Math.round((prog.done / prog.total) * 100) : 0;
+    return (
+      '<div class="trip-card" data-trip="' + trip.id + '">' +
+        '<div class="row1">' +
+          '<div><h3>' + escapeHtml(trip.title || route) + '</h3><div class="route">' + escapeHtml(trip.origin || "") + ' → ' + escapeHtml(route) + '</div></div>' +
+          '<span class="status-pill status-' + statusMeta.key + '">' + statusMeta.label + '</span>' +
+        '</div>' +
+        '<div class="meta-row">' +
+          '<span>' + fmtDate(trip.startDate) + ' – ' + fmtDate(trip.endDate) + '</span>' +
+          '<span>' + nights + ' nights</span>' +
+          '<span>' + (trip.travelers || 1) + ' traveler(s)</span>' +
+        '</div>' +
+        (total ? '<div class="cost">' + currency + ' ' + total.toLocaleString() + ' <small>' + (trip.needsFlights === false ? "stays" : "flights + stays") + '</small></div>' : '<div class="cost" style="color:var(--ink-soft); font-size:13px; font-weight:500;">No costs entered yet</div>') +
+        '<div><div class="checklist-progress">' + prog.done + ' / ' + prog.total + ' planning items done</div><div class="progress-bar"><div style="width:' + pct + '%"></div></div></div>' +
+        '<div class="card-actions">' +
+          '<button class="btn small" data-action="open-trip" data-trip="' + trip.id + '">Open</button>' +
+          '<button class="btn small danger ghost" data-action="delete-trip" data-trip="' + trip.id + '">Delete</button>' +
+        '</div>' +
+      '</div>'
+    );
+  }
+
+  // ---------------- Modals ----------------
+
+  function renderModal() {
+    if (state.view === "describeTrip") return renderDescribeTripModal();
+    if (state.view === "newTrip") return renderNewTripModal();
+    if (state.view === "editProfile") return renderProfileModal();
+    if (state.view === "tripDetail") return renderTripDetailModal();
+    return "";
+  }
+
+  function renderDescribeTripModal() {
+    var loadingHtml = state.describeLoading
+      ? '<div class="describe-loading"><div class="spinner"></div>Reading your trip idea…</div>'
+      : "";
+    var errorHtml = state.describeError
+      ? '<div class="describe-error">' + escapeHtml(state.describeError) + '</div>'
+      : "";
+    return (
+      '<div class="overlay" data-action="close-modal-bg">' +
+        '<div class="panel" data-stop="1">' +
+          '<div class="panel-head"><h2>Plan a trip</h2><button class="btn ghost small" data-action="close-modal">✕</button></div>' +
+          '<p style="font-size:14px; color:var(--ink-soft); margin:-8px 0 16px;">Describe it in your own words — destination, roughly when, what you\'re into. I\'ll turn it into a trip you can review before creating.</p>' +
+          '<div class="describe-input-row">' +
+            '<textarea class="describe-box" id="describe-text" placeholder="e.g. 10 days in Portugal next spring — Lisbon and Porto, love food and hiking, mid-range budget, just the two of us"' + (state.describeLoading ? " disabled" : "") + '></textarea>' +
+          '</div>' +
+          '<div class="voice-hint">On phone or tablet, your keyboard\'s own dictation key works here — tap it and speak.</div>' +
+          '<div class="describe-hint">' + (sampleApi ? "This reads your description once to fill in a trip form — nothing is booked or researched yet." : "AI parsing isn’t available in this view, so your description will be saved as a note on a blank trip form.") + '</div>' +
+          errorHtml + loadingHtml +
+          '<div class="panel-footer">' +
+            '<button type="button" class="manual-link" data-action="manual-new-trip">Skip this, fill in the form myself</button>' +
+            '<button class="btn" data-action="close-modal"' + (state.describeLoading ? " disabled" : "") + '>Cancel</button>' +
+            '<button class="btn primary" data-action="plan-trip"' + (state.describeLoading ? " disabled" : "") + '>' + (sampleApi ? "Plan it" : "Continue") + '</button>' +
+          '</div>' +
+        '</div>' +
+      '</div>'
+    );
+  }
+
+  function renderProfileModal() {
+    var p = state.profile || {};
+    var priorities = p.priorities || [];
+    return (
+      '<div class="overlay" data-action="close-modal-bg">' +
+        '<div class="panel" data-stop="1">' +
+          '<div class="panel-head"><h2>Your travel profile</h2><button class="btn ghost small" data-action="close-modal">✕</button></div>' +
+          '<div class="field"><label>Home city</label><input type="text" id="pf-home" value="' + escapeHtml(p.homeCity || "") + '" placeholder="e.g. Sydney"></div>' +
+          '<div class="field"><label>Usual number of travelers</label><input type="number" id="pf-travelers" min="1" value="' + escapeHtml(p.defaultTravelers || 1) + '"></div>' +
+          '<div class="field"><label>Default budget style</label><select id="pf-budget">' +
+            BUDGET_OPTIONS.map(function (b) { return '<option value="' + escapeHtml(b) + '"' + (p.budgetStyle === b ? " selected" : "") + '>' + b + '</option>'; }).join("") +
+          '</select></div>' +
+          '<div class="field"><label>Usual priorities</label><div class="toggle-group" id="pf-priorities">' +
+            PRIORITY_OPTIONS.map(function (pr) { return '<button type="button" class="toggle-chip' + (priorities.indexOf(pr) > -1 ? " on" : "") + '" data-value="' + escapeHtml(pr) + '">' + pr + '</button>'; }).join("") +
+          '</div></div>' +
+          '<div class="field"><label>Standing preferences / notes</label><textarea id="pf-notes" placeholder="e.g. prefer aisle seats, avoid red-eyes, allergic to shellfish...">' + escapeHtml(p.notes || "") + '</textarea></div>' +
+          '<div class="panel-footer"><button class="btn" data-action="close-modal">Cancel</button><button class="btn primary" data-action="save-profile">Save profile</button></div>' +
+        '</div>' +
+      '</div>'
+    );
+  }
+
+  function renderNewTripModal() {
+    var pre = state.formPrefill || {};
+    var legs = state.formLegs || [{ city: "", nights: 3 }];
+    var priorities = state.formPriorities || pre.priorities || (state.profile && state.profile.priorities) || [];
+    var totalNights = legsTotalNights(legs);
+    var fromAi = !!state.formPrefill;
+    var editing = !!state.editingTripId;
+    return (
+      '<div class="overlay" data-action="close-modal-bg">' +
+        '<div class="panel" data-stop="1">' +
+          '<div class="panel-head"><h2>' + (editing ? "Edit trip" : fromAi ? "Review your trip" : "New trip") + '</h2><button class="btn ghost small" data-action="close-modal">✕</button></div>' +
+          (fromAi && !editing ? '<p style="font-size:13px; color:var(--ink-soft); margin:-8px 0 16px;">Filled in from what you described — check the dates especially, then create it.</p>' : "") +
+          '<div class="field"><label>Trip title</label><input type="text" id="nt-title" value="' + escapeHtml(pre.title || "") + '" placeholder="e.g. Italy — Rome / Florence / Venice"></div>' +
+          '<div class="field-row">' +
+            '<div class="field"><label>From</label><input type="text" id="nt-origin" value="' + escapeHtml(pre.origin || (state.profile && state.profile.homeCity) || "") + '"></div>' +
+            '<div class="field"><label>Travelers</label><input type="number" id="nt-travelers" min="1" value="' + escapeHtml(pre.travelers || (state.profile && state.profile.defaultTravelers) || 2) + '"></div>' +
+          '</div>' +
+          '<div class="field checkbox-field"><input type="checkbox" id="nt-needsflights"' + (pre.needsFlights === false ? "" : " checked") + '><label for="nt-needsflights">This trip needs flights</label></div>' +
+          '<div class="field-row">' +
+            '<div class="field"><label>Start date</label><input type="date" id="nt-start" value="' + escapeHtml(pre.startDate || "") + '"></div>' +
+            '<div class="field"><label>End date</label><input type="date" id="nt-end" value="' + escapeHtml(pre.endDate || "") + '"></div>' +
+          '</div>' +
+          (fromAi && !pre.startDate ? '<div class="describe-hint" style="margin-top:-10px; margin-bottom:16px;">Couldn\'t tell exact dates from your description — add them here so research can be precise.</div>' : "") +
+          '<div class="field"><label>Cities & nights</label>' +
+            '<div id="leg-rows">' + legs.map(function (l, i) { return renderLegRow(l, i); }).join("") + '</div>' +
+            '<button type="button" class="btn small" data-action="add-leg">+ Add city</button>' +
+            '<div class="legs-total" id="legs-total-display">' + totalNights + ' nights across cities</div>' +
+          '</div>' +
+          '<div class="field"><label>Budget style</label><select id="nt-budget">' +
+            BUDGET_OPTIONS.map(function (b) { return '<option value="' + escapeHtml(b) + '"' + ((pre.budgetStyle || (state.profile && state.profile.budgetStyle)) === b ? " selected" : "") + '>' + b + '</option>'; }).join("") +
+          '</select></div>' +
+          '<div class="field"><label>Priorities for this trip</label><div class="toggle-group" id="nt-priorities">' +
+            PRIORITY_OPTIONS.map(function (pr) { return '<button type="button" class="toggle-chip' + (priorities.indexOf(pr) > -1 ? " on" : "") + '" data-value="' + escapeHtml(pr) + '">' + pr + '</button>'; }).join("") +
+          '</div></div>' +
+          '<div class="field"><label>Notes for this trip</label><textarea id="nt-notes" placeholder="anything specific for this trip...">' + escapeHtml(pre.notes || "") + '</textarea></div>' +
+          '<div class="panel-footer"><button class="btn" data-action="close-modal">Cancel</button><button class="btn primary" data-action="create-trip">' + (editing ? "Save changes" : "Create trip") + '</button></div>' +
+        '</div>' +
+      '</div>'
+    );
+  }
+
+  function renderLegRow(leg, i) {
+    return (
+      '<div class="leg-row" data-leg-index="' + i + '">' +
+        '<input type="text" class="leg-city" placeholder="City" value="' + escapeHtml(leg.city || "") + '">' +
+        '<input type="number" class="leg-nights" min="0" placeholder="Nights" value="' + escapeHtml(leg.nights || 0) + '">' +
+        '<button type="button" class="btn small ghost danger" data-action="remove-leg" data-index="' + i + '">✕</button>' +
+      '</div>'
+    );
+  }
+
+  function renderTripDetailModal() {
+    var trip = state.trips.filter(function (t) { return t.id === state.activeTripId; })[0];
+    if (!trip) return "";
+    var legs = trip.legs || [];
+    var currency = (trip.costs && trip.costs.currency) || "AUD";
+    var flights = trip.costs ? trip.costs.flights : null;
+    var legCosts = (trip.costs && trip.costs.legCosts) || [];
+    var accTotal = tripAccommodationTotal(trip);
+    var grand = tripGrandTotal(trip);
+    var checklist = trip.checklist || [];
+    var links = trip.links || [];
+
+    var tabsHtml = ["brief", "costs", "checklist", "links"].map(function (t) {
+      var labels = { brief: "Research brief", costs: "Costs", checklist: "Still to plan", links: "Suggestions" };
+      return '<div class="detail-tab' + (state.activeTab === t ? " on" : "") + '" data-action="set-tab" data-tab="' + t + '">' + labels[t] + '</div>';
+    }).join("");
+
+    var body = "";
+    if (state.activeTab === "brief") {
+      var missingBasics = !trip.startDate || !trip.endDate;
+      var brief = generateBrief(trip, state.profile);
+      body = '<p style="font-size:13.5px; color:var(--ink-soft); margin:0 0 14px;">This app doesn\'t book or price anything itself — it writes the brief below so a conversation with Claude can. Copy it, paste it into a chat with Claude, and you\'ll get live flight/hotel prices instead of a guess.</p>' +
+        (missingBasics ? '<div class="describe-error" style="margin-bottom:14px;">This trip is missing exact dates, so anything researched from this brief will be a rough guess rather than a real price. <button type="button" class="manual-link" style="margin-top:6px; display:block;" data-action="edit-trip">Add dates now</button></div>' : "") +
+        '<div class="brief-box" id="brief-text">' + escapeHtml(brief) + '</div>' +
+        '<div style="margin-top:12px;"><button class="btn small primary" data-action="copy-brief">Copy brief</button></div>';
+    } else if (state.activeTab === "costs") {
+      var needsFlights = trip.needsFlights !== false;
+      body = '<table class="cost-tbl"><tbody>' +
+        (needsFlights ? '<tr><td>Flights</td><td class="num"><input type="number" id="cost-flights" value="' + (flights === null || flights === undefined ? "" : flights) + '" placeholder="0"></td></tr>' : '<tr><td colspan="2" style="color:var(--ink-soft); font-size:12.5px; padding-bottom:2px;">No flights for this trip</td></tr>') +
+        legs.map(function (l, i) {
+          return '<tr><td>' + escapeHtml(l.city) + ' (' + l.nights + 'n)</td><td class="num"><input type="number" class="leg-cost" data-index="' + i + '" value="' + (legCosts[i] === undefined || legCosts[i] === null ? "" : legCosts[i]) + '" placeholder="0"></td></tr>';
+        }).join("") +
+        '<tr class="total"><td>Total</td><td class="num">' + currency + ' ' + grand.toLocaleString() + '</td></tr>' +
+        '</tbody></table>' +
+        '<div style="margin-top:14px;"><button class="btn small primary" data-action="save-costs">Save costs</button></div>';
+    } else if (state.activeTab === "checklist") {
+      body = checklist.map(function (item, i) {
+        return '<div class="check-item' + (item.done ? " done" : "") + '">' +
+          '<input type="checkbox" data-action="toggle-check" data-index="' + i + '"' + (item.done ? " checked" : "") + '>' +
+          '<div style="flex:1;"><div class="label">' + escapeHtml(item.label) + '</div>' +
+          '<input type="text" class="note-input" data-action="check-note" data-index="' + i + '" placeholder="note (optional)" value="' + escapeHtml(item.note || "") + '"></div>' +
+          '<button class="btn small ghost danger" data-action="remove-check" data-index="' + i + '">✕</button>' +
+        '</div>';
+      }).join("") +
+      '<div class="add-check-row"><input type="text" id="new-check-label" placeholder="Add a custom item..."><button class="btn small" data-action="add-check">Add</button></div>';
+    } else if (state.activeTab === "links") {
+      body = (links.length ? "" : '<p style="font-size:13px; color:var(--ink-soft); margin:0 0 14px;">Save links to places, listings, or reports here as research comes in — and jot your own take on each ("too far from the beach", "love this one") so it doesn\'t get lost.</p>') +
+      links.map(function (l, i) {
+        return '<div class="check-item" style="align-items:center;">' +
+          '<div style="flex:1;">' +
+            '<a href="' + escapeHtml(l.url) + '" target="_blank" rel="noopener" style="font-size:14px; font-weight:500; color:var(--accent);">' + escapeHtml(l.label || l.url) + '</a>' +
+            '<input type="text" class="note-input link-note-input" data-index="' + i + '" placeholder="your take on this one (optional)" value="' + escapeHtml(l.note || "") + '">' +
+          '</div>' +
+          '<button class="btn small ghost danger" data-action="remove-link" data-index="' + i + '">✕</button>' +
+        '</div>';
+      }).join("") +
+      '<div class="add-check-row"><input type="text" id="new-link-label" placeholder="Label" style="max-width:160px;"><input type="text" id="new-link-url" placeholder="https://..."><button class="btn small" data-action="add-link">Add</button></div>';
+    }
+
+    var statusSelect = '<select id="trip-status" data-action="set-status">' +
+      STATUS_OPTIONS.map(function (s) { return '<option value="' + s.key + '"' + (trip.status === s.key ? " selected" : "") + '>' + s.label + '</option>'; }).join("") +
+      '</select>';
+
+    return (
+      '<div class="overlay" data-action="close-modal-bg">' +
+        '<div class="panel" data-stop="1" style="max-width:760px;">' +
+          '<div class="panel-head"><div><h2>' + escapeHtml(trip.title || "Trip") + '</h2>' +
+            '<div style="font-size:13px; color:var(--ink-soft); margin-top:4px;">' + escapeHtml(trip.origin) + ' → ' + legs.map(function (l) { return l.city; }).join(" → ") + ' · ' + fmtDate(trip.startDate) + ' – ' + fmtDate(trip.endDate) + '</div></div>' +
+            '<div style="display:flex; gap:8px; align-items:center;">' + statusSelect + '<button class="btn small" data-action="edit-trip">Edit</button><button class="btn ghost small" data-action="close-modal">✕</button></div>' +
+          '</div>' +
+          '<div class="detail-tabs">' + tabsHtml + '</div>' +
+          '<div>' + body + '</div>' +
+        '</div>' +
+      '</div>'
+    );
+  }
+
+  // ---------------- Event wiring ----------------
+
+  function wireEvents() {
+    document.querySelectorAll("[data-action]").forEach(function (el) {
+      el.addEventListener("click", handleClick);
+    });
+    // toggle chips (profile + new trip) need their own click handling since they're buttons with data-value
+    document.querySelectorAll("#pf-priorities .toggle-chip, #nt-priorities .toggle-chip").forEach(function (el) {
+      el.addEventListener("click", function () { el.classList.toggle("on"); });
+    });
+    // stop propagation on panel so bg click doesn't close it
+    document.querySelectorAll("[data-stop]").forEach(function (el) {
+      el.addEventListener("click", function (e) { e.stopPropagation(); });
+    });
+    // costs autosave inputs need change listeners already covered by save button; note inputs save on blur
+    document.querySelectorAll(".note-input:not(.link-note-input)").forEach(function (el) {
+      el.addEventListener("blur", function () {
+        var i = Number(el.getAttribute("data-index"));
+        updateChecklistItem(i, { note: el.value });
+      });
+    });
+    document.querySelectorAll(".link-note-input").forEach(function (el) {
+      el.addEventListener("blur", function () {
+        var i = Number(el.getAttribute("data-index"));
+        updateLinkNote(i, el.value);
+      });
+    });
+    // live nights-total readout in the new-trip form, without a full re-render (would drop focus/typing)
+    var legsTotalEl = document.getElementById("legs-total-display");
+    if (legsTotalEl) {
+      document.querySelectorAll(".leg-nights, #nt-start, #nt-end").forEach(function (el) {
+        el.addEventListener("input", updateLegsTotalDisplay);
+      });
+    }
+  }
+
+  function updateLegsTotalDisplay() {
+    var el = document.getElementById("legs-total-display");
+    if (!el) return;
+    var total = 0;
+    document.querySelectorAll("#leg-rows .leg-nights").forEach(function (n) { total += Number(n.value) || 0; });
+    var start = document.getElementById("nt-start").value;
+    var end = document.getElementById("nt-end").value;
+    var dateNights = nightsBetween(start, end);
+    var text = total + " nights across cities";
+    var mismatch = start && end && dateNights && dateNights !== total;
+    if (mismatch) {
+      text += " — but your dates span " + dateNights + " nights. Worth double-checking before you send the brief.";
+    }
+    el.textContent = text;
+    el.classList.toggle("mismatch", !!mismatch);
+  }
+
+  function handleClick(e) {
+    var action = e.currentTarget.getAttribute("data-action");
+    if (!action) return;
+    var trip, id;
+    switch (action) {
+      case "new-trip":
+        state.view = "describeTrip";
+        state.describeError = null;
+        state.describeLoading = false;
+        state.editingTripId = null;
+        render();
+        break;
+      case "manual-new-trip":
+        state.describeToken++;   // discard any in-flight AI parse — this trip is going manual instead
+        state.describeLoading = false;
+        state.view = "newTrip";
+        state.formLegs = [{ city: "", nights: 3 }];
+        state.formPrefill = null;
+        state.editingTripId = null;
+        render();
+        break;
+      case "plan-trip":
+        submitDescribeTrip();
+        break;
+      case "edit-profile":
+        state.view = "editProfile";
+        render();
+        break;
+      case "open-trip":
+        state.activeTripId = e.currentTarget.getAttribute("data-trip");
+        state.view = "tripDetail";
+        state.activeTab = "brief";
+        render();
+        break;
+      case "edit-trip":
+        trip = state.trips.filter(function (t) { return t.id === state.activeTripId; })[0];
+        if (!trip) break;
+        state.editingTripId = trip.id;
+        state.formLegs = (trip.legs || [{ city: "", nights: 3 }]).map(function (l) { return { city: l.city, nights: l.nights }; });
+        state.formPrefill = {
+          title: trip.title || "",
+          origin: trip.origin || "",
+          travelers: trip.travelers || 1,
+          needsFlights: trip.needsFlights !== false,
+          startDate: trip.startDate || "",
+          endDate: trip.endDate || "",
+          budgetStyle: trip.budgetStyle || "",
+          priorities: trip.priorities || [],
+          notes: trip.notes || ""
+        };
+        state.view = "newTrip";
+        render();
+        break;
+      case "delete-trip":
+        id = e.currentTarget.getAttribute("data-trip");
+        if (confirm("Delete this trip? This can't be undone.")) deleteTrip(id);
+        break;
+      case "close-modal":
+      case "close-modal-bg":
+        if (action === "close-modal-bg" && e.target !== e.currentTarget) return;
+        state.describeToken++;   // discard any in-flight AI parse for the modal we're closing
+        state.describeLoading = false;
+        state.editingTripId = null;
+        state.formPrefill = null;
+        state.view = "dashboard";
+        state.activeTripId = null;
+        render();
+        break;
+      case "save-profile":
+        submitProfile();
+        break;
+      case "add-leg":
+        collectLegsFromDom();
+        state.formLegs.push({ city: "", nights: 2 });
+        render();
+        break;
+      case "remove-leg":
+        collectLegsFromDom();
+        state.formLegs.splice(Number(e.currentTarget.getAttribute("data-index")), 1);
+        if (!state.formLegs.length) state.formLegs.push({ city: "", nights: 2 });
+        render();
+        break;
+      case "create-trip":
+        submitNewTrip();
+        break;
+      case "copy-brief":
+        copyBrief();
+        break;
+      case "save-costs":
+        submitCosts();
+        break;
+      case "set-tab":
+        state.activeTab = e.currentTarget.getAttribute("data-tab");
+        render();
+        break;
+      case "toggle-check":
+        toggleCheckItem(Number(e.currentTarget.getAttribute("data-index")));
+        break;
+      case "remove-check":
+        removeCheckItem(Number(e.currentTarget.getAttribute("data-index")));
+        break;
+      case "add-check":
+        addCheckItem();
+        break;
+      case "remove-link":
+        removeLink(Number(e.currentTarget.getAttribute("data-index")));
+        break;
+      case "add-link":
+        addLink();
+        break;
+    }
+  }
+
+  document.addEventListener("change", function (e) {
+    if (e.target && e.target.id === "trip-status") {
+      saveTrip(state.activeTripId, { status: e.target.value });
+    }
+  });
+
+  function collectLegsFromDom() {
+    var rows = document.querySelectorAll("#leg-rows .leg-row");
+    var legs = [];
+    rows.forEach(function (row) {
+      legs.push({
+        city: row.querySelector(".leg-city").value,
+        nights: Number(row.querySelector(".leg-nights").value) || 0
+      });
+    });
+    state.formLegs = legs;
+  }
+
+  function collectPriorities(containerId) {
+    var out = [];
+    document.querySelectorAll("#" + containerId + " .toggle-chip.on").forEach(function (el) {
+      out.push(el.getAttribute("data-value"));
+    });
+    return out;
+  }
+
+  function submitProfile() {
+    var patch = {
+      homeCity: document.getElementById("pf-home").value.trim(),
+      defaultTravelers: Number(document.getElementById("pf-travelers").value) || 1,
+      budgetStyle: document.getElementById("pf-budget").value,
+      priorities: collectPriorities("pf-priorities"),
+      notes: document.getElementById("pf-notes").value.trim()
+    };
+    saveProfile(patch);
+    state.view = "dashboard";
+    render();
+  }
+
+  function submitNewTrip() {
+    collectLegsFromDom();
+    var legs = (state.formLegs || []).filter(function (l) { return l.city; });
+    if (!legs.length) { alert("Add at least one city."); return; }
+    var title = document.getElementById("nt-title").value.trim() || legs.map(function (l) { return l.city; }).join(" / ");
+    var coreFields = {
+      title: title,
+      origin: document.getElementById("nt-origin").value.trim(),
+      travelers: Number(document.getElementById("nt-travelers").value) || 1,
+      needsFlights: document.getElementById("nt-needsflights").checked,
+      startDate: document.getElementById("nt-start").value,
+      endDate: document.getElementById("nt-end").value,
+      legs: legs,
+      budgetStyle: document.getElementById("nt-budget").value,
+      priorities: collectPriorities("nt-priorities"),
+      notes: document.getElementById("nt-notes").value.trim()
+    };
+
+    if (state.editingTripId) {
+      var existing = state.trips.filter(function (t) { return t.id === state.editingTripId; })[0];
+      // keep per-city cost entries lined up if the city list changed shape
+      var oldLegCosts = (existing && existing.costs && existing.costs.legCosts) || [];
+      var newLegCosts = legs.map(function (l, i) {
+        var oldIndex = existing ? (existing.legs || []).findIndex(function (ol) { return ol.city === l.city; }) : -1;
+        return oldIndex > -1 && oldLegCosts[oldIndex] !== undefined ? oldLegCosts[oldIndex] : null;
+      });
+      coreFields.costs = { currency: (existing && existing.costs && existing.costs.currency) || "AUD", flights: existing && existing.costs ? existing.costs.flights : null, legCosts: newLegCosts };
+      var editedId = state.editingTripId;
+      saveTrip(editedId, coreFields);
+      state.editingTripId = null;
+      state.formPrefill = null;
+      state.view = "tripDetail";
+      state.activeTripId = editedId;
+      render();
+      return;
+    }
+
+    var data = Object.assign({}, coreFields, {
+      status: "idea",
+      costs: { currency: "AUD", flights: null, legCosts: legs.map(function () { return null; }) },
+      checklist: DEFAULT_CHECKLIST.map(function (c) { return { key: c.key, label: c.label, done: false, note: "" }; }),
+      links: []
+    });
+    var id = createTrip(data);
+    state.view = "tripDetail";
+    state.activeTripId = id;
+    state.activeTab = "brief";
+    state.formPrefill = null;
+    render();
+  }
+
+  function submitDescribeTrip() {
+    var textEl = document.getElementById("describe-text");
+    var text = textEl ? textEl.value.trim() : "";
+    if (!text) return;
+
+    if (!sampleApi) {
+      // no AI parsing in this view — carry the description over as a note on a blank form
+      state.formPrefill = { notes: text };
+      state.formLegs = [{ city: "", nights: 3 }];
+      state.view = "newTrip";
+      render();
+      return;
+    }
+
+    state.describeLoading = true;
+    state.describeError = null;
+    var myToken = ++state.describeToken;
+    render();
+
+    var profile = state.profile || {};
+    sampleApi.json(buildParsePrompt(text, profile), { modelTier: "quick", cache: false })
+      .then(function (data) {
+        if (myToken !== state.describeToken) return; // modal was closed or reopened while this was in flight
+        state.describeLoading = false;
+        if (!data || typeof data !== "object") throw { code: "invalid_json" };
+        applyParsedTrip(data, profile, text);
+        state.view = "newTrip";
+        render();
+      })
+      .catch(function (e) {
+        if (myToken !== state.describeToken) return;
+        state.describeLoading = false;
+        if (e && e.code === "not_granted") {
+          // viewer declined the AI prompt — degrade gracefully, don't lose their description
+          state.formPrefill = { notes: text };
+          state.formLegs = [{ city: "", nights: 3 }];
+          state.view = "newTrip";
+          render();
+          return;
+        }
+        state.describeError = describeErrorMessage(e);
+        render();
+      });
+  }
+
+  function applyParsedTrip(data, profile, rawText) {
+    var legs = Array.isArray(data.legs) ? data.legs
+      .map(function (l) { return { city: String((l && l.city) || "").trim(), nights: Number(l && l.nights) || 0 }; })
+      .filter(function (l) { return l.city; }) : [];
+    if (!legs.length) legs = [{ city: "", nights: 3 }];
+    state.formLegs = legs;
+    state.formPrefill = {
+      title: typeof data.title === "string" ? data.title : "",
+      origin: typeof data.origin === "string" && data.origin ? data.origin : (profile.homeCity || ""),
+      travelers: Number(data.travelers) || profile.defaultTravelers || 2,
+      needsFlights: data.needsFlights !== false,
+      startDate: typeof data.startDate === "string" && /^\d{4}-\d{2}-\d{2}$/.test(data.startDate) ? data.startDate : "",
+      endDate: typeof data.endDate === "string" && /^\d{4}-\d{2}-\d{2}$/.test(data.endDate) ? data.endDate : "",
+      budgetStyle: BUDGET_OPTIONS.indexOf(data.budgetStyle) > -1 ? data.budgetStyle : (profile.budgetStyle || BUDGET_OPTIONS[1]),
+      priorities: Array.isArray(data.priorities) ? data.priorities.filter(function (p) { return PRIORITY_OPTIONS.indexOf(p) > -1; }) : [],
+      notes: typeof data.notes === "string" ? data.notes : ""
+    };
+  }
+
+  function describeErrorMessage(e) {
+    var code = e && e.code;
+    if (code === "rate_limited") return "Too many requests right now — wait a moment and try again, or fill in the form yourself.";
+    if (code === "resource_exhausted") return "Hit a usage limit — try again shortly, or fill in the form yourself.";
+    if (code === "invalid_json") return "Couldn't quite parse that — try rephrasing with a clearer destination, or fill in the form yourself.";
+    return "Something went wrong reading that — try again, or fill in the form yourself.";
+  }
+
+  function buildParsePrompt(text, profile) {
+    var home = profile.homeCity || "not specified";
+    var travelers = profile.defaultTravelers || 2;
+    var budget = profile.budgetStyle || BUDGET_OPTIONS[1];
+    return (
+      "Extract structured trip-planning fields from a traveler's free-text description, to prefill a form. " +
+      "Their home city (default origin) is \"" + home + "\". Default travelers: " + travelers + ". Default budget style: \"" + budget + "\".\n\n" +
+      "Allowed budgetStyle values (pick exactly one, closest fit): " + JSON.stringify(BUDGET_OPTIONS) + "\n" +
+      "Allowed priorities values (pick zero or more, exact matches only): " + JSON.stringify(PRIORITY_OPTIONS) + "\n\n" +
+      "Traveler's description:\n\"\"\"\n" + text + "\n\"\"\"\n\n" +
+      "Reply with only a JSON object with exactly these fields, no other text:\n" +
+      "{\n" +
+      "  \"title\": string,  // short trip title, e.g. \"Portugal — Lisbon & Porto\"\n" +
+      "  \"origin\": string,  // origin city; use the home city above unless the text names a different one\n" +
+      "  \"travelers\": number,\n" +
+      "  \"needsFlights\": boolean,  // false if this reads as a regional/domestic trip reachable by car or a short drive from the home city (e.g. a weekend getaway within the same state/region); true otherwise, including any international or long-distance trip\n" +
+      "  \"legs\": [{ \"city\": string, \"nights\": number }],  // one entry per city visited; infer a reasonable nights split from any total-duration mentioned; a single-destination trip is one entry\n" +
+      "  \"startDate\": \"\",  // ISO yyyy-mm-dd ONLY if an exact date is clearly given, else an empty string — never guess a specific date from a vague season/month mention\n" +
+      "  \"endDate\": \"\",    // same rule as startDate\n" +
+      "  \"budgetStyle\": string,  // exactly one value from the allowed list above\n" +
+      "  \"priorities\": [],  // zero or more values from the allowed list above, exact matches only\n" +
+      "  \"notes\": string  // anything else worth keeping (interests, constraints, people) that doesn't fit the fields above\n" +
+      "}"
+    );
+  }
+
+  function copyBrief() {
+    var el = document.getElementById("brief-text");
+    if (!el) return;
+    var text = el.innerText;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function () { flashCopy(); }, function () { fallbackCopy(text); });
+    } else {
+      fallbackCopy(text);
+    }
+  }
+  function fallbackCopy(text) {
+    var ta = document.createElement("textarea");
+    ta.value = text; document.body.appendChild(ta); ta.select();
+    try { document.execCommand("copy"); flashCopy(); } catch (e) {}
+    document.body.removeChild(ta);
+  }
+  function flashCopy() {
+    var btn = document.querySelector('[data-action="copy-brief"]');
+    if (btn) { var orig = btn.textContent; btn.textContent = "Copied!"; setTimeout(function () { btn.textContent = orig; }, 1400); }
+  }
+
+  function submitCosts() {
+    var trip = state.trips.filter(function (t) { return t.id === state.activeTripId; })[0];
+    if (!trip) return;
+    var flightsEl = document.getElementById("cost-flights"); // absent when this trip doesn't need flights
+    var flights = flightsEl ? flightsEl.value : "";
+    var legCosts = [];
+    document.querySelectorAll(".leg-cost").forEach(function (el) {
+      var v = el.value;
+      legCosts[Number(el.getAttribute("data-index"))] = v === "" ? null : Number(v);
+    });
+    saveTrip(trip.id, { costs: { currency: (trip.costs && trip.costs.currency) || "AUD", flights: flights === "" ? null : Number(flights), legCosts: legCosts } });
+  }
+
+  function toggleCheckItem(i) {
+    var trip = state.trips.filter(function (t) { return t.id === state.activeTripId; })[0];
+    if (!trip) return;
+    var checklist = (trip.checklist || []).slice();
+    checklist[i] = Object.assign({}, checklist[i], { done: !checklist[i].done });
+    saveTrip(trip.id, { checklist: checklist });
+  }
+
+  function updateChecklistItem(i, patch) {
+    var trip = state.trips.filter(function (t) { return t.id === state.activeTripId; })[0];
+    if (!trip) return;
+    var checklist = (trip.checklist || []).slice();
+    checklist[i] = Object.assign({}, checklist[i], patch);
+    saveTrip(trip.id, { checklist: checklist });
+  }
+
+  function removeCheckItem(i) {
+    var trip = state.trips.filter(function (t) { return t.id === state.activeTripId; })[0];
+    if (!trip) return;
+    var checklist = (trip.checklist || []).slice();
+    checklist.splice(i, 1);
+    saveTrip(trip.id, { checklist: checklist });
+  }
+
+  function addCheckItem() {
+    var input = document.getElementById("new-check-label");
+    var label = input.value.trim();
+    if (!label) return;
+    var trip = state.trips.filter(function (t) { return t.id === state.activeTripId; })[0];
+    if (!trip) return;
+    var checklist = (trip.checklist || []).slice();
+    checklist.push({ key: "custom-" + Date.now(), label: label, done: false, note: "" });
+    saveTrip(trip.id, { checklist: checklist });
+  }
+
+  function removeLink(i) {
+    var trip = state.trips.filter(function (t) { return t.id === state.activeTripId; })[0];
+    if (!trip) return;
+    var links = (trip.links || []).slice();
+    links.splice(i, 1);
+    saveTrip(trip.id, { links: links });
+  }
+
+  function addLink() {
+    var labelEl = document.getElementById("new-link-label");
+    var urlEl = document.getElementById("new-link-url");
+    var url = urlEl.value.trim();
+    if (!url) return;
+    var trip = state.trips.filter(function (t) { return t.id === state.activeTripId; })[0];
+    if (!trip) return;
+    var links = (trip.links || []).slice();
+    links.push({ label: labelEl.value.trim() || url, url: url, note: "" });
+    saveTrip(trip.id, { links: links });
+  }
+
+  function updateLinkNote(i, note) {
+    var trip = state.trips.filter(function (t) { return t.id === state.activeTripId; })[0];
+    if (!trip) return;
+    var links = (trip.links || []).slice();
+    if (!links[i]) return;
+    links[i] = Object.assign({}, links[i], { note: note });
+    saveTrip(trip.id, { links: links });
+  }
+
+  // ---------------- Boot ----------------
+  render();
+  initDb();
+  initSample();
+})();
+</script>
+</body>
+</html>
