@@ -1,0 +1,16 @@
+name = "sojourn-research-api"
+main = "worker.js"
+compatibility_date = "2024-11-01"
+
+# Plain (non-secret) config. SOJOURN_ALLOWED_ORIGIN can be a comma-separated
+# list, e.g. "https://yourname.github.io,http://localhost:8765" for local dev.
+[vars]
+SOJOURN_ALLOWED_ORIGIN = "https://yourname.github.io"
+
+# One KV namespace, used for both response caching and rate-limit counters
+# (different key prefixes) — see backend/README.md for how to create this
+# and paste the real id below. Everything else (ANTHROPIC_API_KEY,
+# SEARCH_API_KEY) is set with `wrangler secret put`, never written here.
+[[kv_namespaces]]
+binding = "SOJOURN_KV"
+id = "REPLACE_WITH_YOUR_KV_NAMESPACE_ID"

@@ -258,16 +258,95 @@
     deepResearch: deepResearch
   };
 
-  // No live research provider exists yet — see the final report for exactly
-  // what a LiveResearchProvider would need (a backend endpoint + a search
-  // API key, neither of which can live in this static frontend). The
-  // integration boundary is this single object; swapping providers means
-  // reassigning window.SojournResearch.provider, nothing else.
+  // ==========================================================================
+  // LiveResearchProvider — calls the Sojourn Research API (backend/worker.js).
+  // Never falls back to mock data internally on failure: every method
+  // rejects with a clear {code, message} so plan-ui.js can show the
+  // explicit "Live research isn't available right now" state (§20) rather
+  // than silently serving Demo Mode content under a "LIVE" label.
+  // ==========================================================================
+
+  var MONTH_NAMES_FULL = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"];
+  function extractMonthWord(text) {
+    if (!text) return undefined;
+    var lower = String(text).toLowerCase();
+    for (var i = 0; i < MONTH_NAMES_FULL.length; i++) {
+      if (lower.indexOf(MONTH_NAMES_FULL[i]) > -1) return MONTH_NAMES_FULL[i].charAt(0).toUpperCase() + MONTH_NAMES_FULL[i].slice(1);
+    }
+    return undefined;
+  }
+
+  function shapeProfileForBackend(profile) {
+    profile = profile || {};
+    var homeCity;
+    try { homeCity = window.SojournTrips && window.SojournTrips.getProfile && window.SojournTrips.getProfile().homeCity; } catch (e) { homeCity = undefined; }
+    var out = {
+      travellers: profile.travellers || undefined,
+      duration: profile.duration || undefined,
+      month: extractMonthWord(profile.rawText),
+      interests: profile.interests || [],
+      pace: (profile.pace === "active" ? "active" : profile.pace === "slow" ? "slow" : "balanced"),
+      origin: homeCity || undefined,
+      rawText: (profile.rawText || "").slice(0, 2000)
+    };
+    if (profile.budget) out.budget = { amount: profile.budget, currency: profile.budgetCurrency || "AUD" };
+    return out;
+  }
+
+  function liveFetch(path, body) {
+    var base = window.SojournConfig && window.SojournConfig.apiBaseUrl;
+    if (!base) return Promise.reject({ code: "not_configured", message: "Live Mode has no backend URL configured." });
+    return fetch(base + path, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    }).then(function (res) {
+      if (!res.ok) {
+        return res.json().catch(function () { return {}; }).then(function (errBody) {
+          return Promise.reject({ code: errBody.error || "backend_error", status: res.status, message: errBody.message });
+        });
+      }
+      return res.json();
+    }, function () {
+      return Promise.reject({ code: "network_error", message: "Couldn't reach the research backend." });
+    });
+  }
+
+  function liveResearchOne(path, destId, profile) {
+    var P = window.SojournPlan;
+    var dest = P.DESTINATIONS.filter(function (d) { return d.id === destId; })[0];
+    if (!dest) return Promise.reject({ code: "unknown_destination" });
+    var body = { destination: dest.name, country: dest.country, travelProfile: shapeProfileForBackend(profile) };
+    return liveFetch(path, body).then(function (result) {
+      return Object.assign({}, result, { destinationId: destId, image: dest.image, emoji: dest.emoji });
+    });
+  }
+
+  var LiveResearchProvider = {
+    mode: "live",
+    researchDestination: function (destId, profile) { return liveResearchOne("/api/research/destination", destId, profile); },
+    researchAllCandidates: function (ids, profile) {
+      // Fail-fast, deliberately: if live research is genuinely broken it's
+      // broken for all candidates, and a partially-mock result set under a
+      // "LIVE" label would be exactly the silent fallback §20 forbids.
+      return Promise.all(ids.map(function (id) { return liveResearchOne("/api/research/destination", id, profile); }));
+    },
+    deepResearch: function (destId, profile) { return liveResearchOne("/api/research/deep", destId, profile); }
+  };
+
+  // The integration boundary: swapping Demo/Live means reassigning this one
+  // property. Chosen at boot from window.SojournConfig (js/sojourn-config.js,
+  // loaded first) — nothing else in the app needs to know which is active.
+  var selectedProvider = (window.SojournConfig && window.SojournConfig.researchMode === "live") ? LiveResearchProvider : MockResearchProvider;
+
   window.SojournResearch = {
-    provider: MockResearchProvider,
+    provider: selectedProvider,
     isLive: function () { return window.SojournResearch.provider.mode === "live"; },
     researchDestination: function (destId, profile) { return window.SojournResearch.provider.researchDestination(destId, profile); },
     researchAllCandidates: function (ids, profile) { return window.SojournResearch.provider.researchAllCandidates(ids, profile); },
     deepResearch: function (destId, profile) { return window.SojournResearch.provider.deepResearch(destId, profile); }
   };
+  // Exposed so the UI's explicit "Use Demo Mode" fallback (after a Live
+  // Mode failure) can switch providers deliberately — never silently.
+  window.SojournResearchDemoProvider = MockResearchProvider;
 })();

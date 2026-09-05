@@ -30,6 +30,8 @@
       loadingLabel: "",
       modifyInput: "",
       errorMessage: null,
+      liveFailure: null,         // set when Live Mode research fails outright — drives the explicit retry/demo screen
+      deepResearchDegraded: false, // Live Mode: deep research failed but the trip still generated without it
       entryPoint: "plan"          // "plan" | "explore" — drives the back-link label deeper in the flow
     };
   }
@@ -49,8 +51,8 @@
   var IMMERSIVE_VIEWS = ["hero", "listening", "understanding", "confirm", "researching"];
 
   var LOADING_STEPS = {
-    understanding: ["Understanding your travel style…", "Reading between the lines…"],
-    researching: ["Checking the season…", "Looking at beaches…", "Comparing travel times…", "Finding experiences…", "Checking the budget…"],
+    understanding: ["Understanding your trip…", "Reading between the lines…"],
+    researching: ["Understanding your trip…", "Checking the season…", "Comparing destinations…", "Looking at travel logistics…", "Finding experiences…", "Comparing the options…"],
     generating: ["Researching neighbourhoods…", "Matching hotels…", "Putting the route together…"]
   };
 
@@ -113,6 +115,7 @@
       case "understanding": return renderLoading("understanding");
       case "confirm": return renderConfirm();
       case "researching": return renderResearching();
+      case "live-failed": return renderLiveFailed();
       case "destinations": return renderDestinations();
       case "generating": return renderLoading("generating");
       case "trip": return renderTrip();
@@ -238,6 +241,22 @@
     );
   }
 
+  // §20: Live Mode failing is never allowed to quietly resolve into a
+  // Demo-Mode result under a "LIVE" label. This is its own explicit dead
+  // stop — retry the exact same research, or knowingly switch to Demo Mode.
+  function renderLiveFailed() {
+    return (
+      '<section class="hero live-failed-view">' +
+        '<p class="display-md center anim-rise stagger-1">Live research isn’t available right now.</p>' +
+        '<p class="lead center anim-rise stagger-2">' + escapeHtml(state.liveFailure || "I couldn’t complete the current research.") + ' You can retry, or switch to Demo Mode for a curated, illustrative version of this trip.</p>' +
+        '<div class="dest-reveal-actions anim-rise stagger-3">' +
+          '<button class="btn primary" data-action="retry-research">Retry</button>' +
+          '<button class="btn ghost" data-action="use-demo-mode">Use Demo Mode</button>' +
+        '</div>' +
+      '</section>'
+    );
+  }
+
   function renderDestinations() {
     if (state.errorMessage && !state.recommendations.length) {
       return (
@@ -297,6 +316,16 @@
       return '<div class="score-row"><span>' + categoryChip(c.category) + '</span><span>' + c.score + '/100 · ' + c.weight + '% weight</span></div>';
     }).join("");
     var isLive = window.SojournResearch && window.SojournResearch.isLive();
+    var sources = research.sources || [];
+    var sourcesHtml = sources.length
+      ? '<div class="sources-list">' + sources.map(function (s) {
+          return '<a class="source-row" href="' + escapeHtml(s.url) + '" target="_blank" rel="noopener noreferrer">' +
+            '<span class="source-quality sq-' + (s.sourceQuality || "unknown") + '">' + (s.sourceQuality || "unknown") + '</span>' +
+            '<span class="source-body"><span class="source-title">' + escapeHtml(s.title || s.url) + '</span>' +
+            '<span class="source-meta">' + escapeHtml(s.publisher || "") + (s.retrievedAt ? " · retrieved " + escapeHtml(String(s.retrievedAt).slice(0, 10)) : "") + '</span></span>' +
+          '</a>';
+        }).join("") + '</div>'
+      : "";
     return (
       '<div class="rec-sources">' +
         '<button type="button" class="rec-sources-toggle" data-action="toggle-sources" data-idx="' + idx + '">' +
@@ -304,8 +333,9 @@
         '</button>' +
         (open ?
           '<div class="rec-sources-panel anim-rise">' +
-            '<p class="rec-sources-note">' + (isLive ? "Live research" : "DEMO MODE — curated reference data, no live sources yet") + '</p>' +
+            '<p class="rec-sources-note">' + (isLive ? "LIVE RESEARCH — current web sources" : "DEMO MODE — curated reference data, no live sources yet") + '</p>' +
             '<div class="evidence-list">' + evidenceHtml + '</div>' +
+            (sourcesHtml ? '<p class="rec-sources-subhead">Sources</p>' + sourcesHtml : "") +
             '<div class="score-breakdown">' + scoresHtml + '</div>' +
           '</div>' : ""
         ) +
@@ -336,6 +366,7 @@
     return (
       '<section class="trip-view">' +
         backLink() +
+        (state.deepResearchDegraded ? '<p class="hero-error dark">Deeper research couldn’t complete for this trip, so the itinerary below uses general recommendations rather than live neighbourhood detail.</p>' : "") +
         compareBlock +
         '<div class="trip-hero img-frame xl overlay-full img-cover anim-scale" style="' + (destMeta.image ? "background-image:url('" + destMeta.image + "')" : "") + '">' +
           '<div class="trip-hero-caption">' +
@@ -508,22 +539,45 @@
       state.recommendations = results[0];
       state.view = "destinations";
       render();
-    }).catch(function () {
+    }).catch(function (err) {
       stopResearchStepper();
-      state.errorMessage = "I couldn't finish researching just now — here's what came back before that happened.";
-      state.view = "destinations";
+      // Live Mode failing must never quietly resolve to an empty/partial
+      // Demo-labelled result (§20) — it gets its own explicit screen with
+      // Retry / Use Demo Mode, never a silent downgrade.
+      if (window.SojournResearch.isLive()) {
+        state.liveFailure = describeLiveError(err);
+        state.view = "live-failed";
+      } else {
+        state.errorMessage = "I couldn't finish researching just now — try describing your trip again.";
+        state.view = "destinations";
+      }
       render();
     });
+  }
+
+  function describeLiveError(err) {
+    var code = err && err.code;
+    if (code === "not_configured") return "Live Mode isn't configured with a research backend yet.";
+    if (code === "rate_limited") return "Live research has hit its rate limit for now.";
+    if (code === "network_error") return "Couldn't reach the research backend.";
+    return "I couldn't complete the current research.";
   }
 
   function pickDestination(id) {
     state.selectedDest = id;
     state.view = "generating";
     state.loadingLabel = "";
+    state.deepResearchDegraded = false;
     render();
     window.SojournResearch.deepResearch(id, state.prefs)
       .then(function (deep) { return P.AI.generateTrip(state.prefs, id, deep); })
-      .catch(function () { return P.AI.generateTrip(state.prefs, id); }) // deep research failed — still build the trip, just without the neighbourhood split
+      .catch(function () {
+        // Deep research failing doesn't invalidate the whole trip — but if
+        // we're in Live Mode, say so plainly rather than quietly serving a
+        // less-informed itinerary under the same "LIVE" badge.
+        if (window.SojournResearch.isLive()) state.deepResearchDegraded = true;
+        return P.AI.generateTrip(state.prefs, id);
+      })
       .then(function (trip) {
         setTimeout(function () {
           state.trip = trip;
@@ -620,6 +674,15 @@
         var idx = e.currentTarget.getAttribute("data-idx");
         state.expandedSources[idx] = !state.expandedSources[idx];
         render();
+        break;
+      case "retry-research":
+        confirmPace(state.prefs.pace || "balanced");
+        break;
+      case "use-demo-mode":
+        // A deliberate, visible switch, not a silent one — the demo badge
+        // will immediately read "DEMO MODE" once this renders, never "LIVE".
+        window.SojournResearch.provider = window.SojournResearchDemoProvider;
+        confirmPace(state.prefs.pace || "balanced");
         break;
       case "back-to-plan-hero":
         state.view = "hero";

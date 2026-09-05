@@ -170,7 +170,27 @@
 .evidence-body { display: flex; flex-direction: column; gap: 1px; }
 .evidence-claim { font-weight: 700; color: var(--ink); }
 .evidence-value { color: var(--ink-soft); }
+.rec-sources-subhead { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-soft); margin: 4px 0 8px; }
+.sources-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+.source-row {
+  display: flex; gap: 10px; align-items: flex-start; padding: 8px 10px; border-radius: 8px;
+  text-decoration: none; transition: background 0.15s var(--ease-premium);
+}
+.source-row:hover { background: var(--surface-2); }
+.source-quality {
+  flex-shrink: 0; font-size: 9px; font-weight: 800; letter-spacing: 0.03em; text-transform: uppercase;
+  padding: 3px 6px; border-radius: 5px; background: var(--surface-2); color: var(--ink-soft); margin-top: 2px;
+}
+.source-quality.sq-official { background: var(--good-soft); color: var(--good); }
+.source-quality.sq-high { background: var(--accent-soft); color: var(--accent); }
+.source-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.source-title { font-size: 12.5px; font-weight: 700; color: var(--accent); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.source-meta { font-size: 11px; color: var(--ink-soft); }
 .score-breakdown { border-top: 1px solid var(--border); padding-top: 12px; display: flex; flex-direction: column; gap: 6px; }
+
+/* ---- explicit Live-Mode-failed screen (§20) ---- */
+.live-failed-view { max-width: 460px; text-align: center; }
+.live-failed-view .dest-reveal-actions { justify-content: center; }
 .score-row { display: flex; justify-content: space-between; font-size: 12.5px; color: var(--ink-soft); }
 
 /* ---- compare banner with bullet changes ---- */

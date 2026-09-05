@@ -1,0 +1,9 @@
+# Never commit secrets. The backend's real secrets (ANTHROPIC_API_KEY,
+# SEARCH_API_KEY) are set with `wrangler secret put` — see backend/README.md
+# — and never touch disk in this repo at all.
+.env
+.env.*
+*.env
+.dev.vars
+backend/.wrangler/
+backend/node_modules/
