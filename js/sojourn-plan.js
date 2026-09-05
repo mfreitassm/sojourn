@@ -405,11 +405,19 @@
     return Math.round(perDay * nights * travellers / 10) * 10;
   }
 
-  function buildItinerary(dest, prefs) {
+  // `bases` — optional list of {name, note} neighbourhoods from deep
+  // research (see travel-research.js). When present, nights are split
+  // across them (e.g. 4 nights in Ubud, then the rest in Uluwatu) instead
+  // of every day showing the same single destination name — this is what
+  // makes the itinerary reflect research rather than a flat template.
+  function buildItinerary(dest, prefs, bases) {
     var nights = Math.max(prefs.duration || 7, 3);
     var days = [];
     var styleTags = (prefs.travelStyle || []).filter(function (t) { return ACTIVITY_BANK[t]; });
     if (!styleTags.length) styleTags = ["culture", "food"];
+
+    var useBases = (bases || []).length > 1 ? bases : null;
+    var splitAt = useBases ? Math.ceil(nights / 2) : null;
 
     for (var i = 0; i < nights; i++) {
       var dayTag = styleTags[i % styleTags.length];
@@ -421,9 +429,17 @@
       }
       activities.sort(function (a, b) { return a.time.localeCompare(b.time); });
       var dayCost = activities.reduce(function (s, a) { return s + a.price; }, 0);
+      var location = dest.name;
+      var locationNote = "";
+      if (useBases) {
+        var base = i < splitAt ? useBases[0] : useBases[1];
+        location = base.name;
+        locationNote = base.note || "";
+      }
       days.push(createTripDay({
         dayNumber: i + 1,
-        location: dest.name,
+        location: location,
+        locationNote: locationNote,
         summary: dayTag.charAt(0).toUpperCase() + dayTag.slice(1) + " day",
         activities: activities,
         estimatedCost: dayCost
@@ -432,11 +448,15 @@
     return days;
   }
 
-  function generateTrip(prefs, destId) {
+  // `deepResearch` — optional DestinationResearchResult-shaped object from
+  // TravelResearchService.deepResearch(); when present its itineraryBases
+  // shape the days above instead of a single flat location.
+  function generateTrip(prefs, destId, deepResearch) {
     var dest = DESTINATIONS.filter(function (d) { return d.id === destId; })[0] || DESTINATIONS[0];
-    var days = buildItinerary(dest, prefs);
+    var bases = deepResearch && deepResearch.itineraryBases;
+    var days = buildItinerary(dest, prefs, bases);
     var activitiesCost = days.reduce(function (s, d) { return s + d.estimatedCost; }, 0);
-    var estimatedCost = prefs.budget || estimateBudget(dest, prefs);
+    var estimatedCost = (deepResearch && deepResearch.budget && deepResearch.budget.estimatedTotal) || prefs.budget || estimateBudget(dest, prefs);
 
     return createTrip({
       title: dest.name + " — " + (prefs.travellers > 1 ? prefs.travellers + " travellers" : "solo trip"),
@@ -448,7 +468,7 @@
       estimatedCost: estimatedCost,
       travelStyle: prefs.travelStyle,
       summary: dest.blurb,
-      destinations: [dest.name],
+      destinations: bases ? bases.map(function (b) { return b.name; }) : [dest.name],
       days: days,
       activities: [].concat.apply([], days.map(function (d) { return d.activities; })),
       changeLog: []
@@ -462,6 +482,7 @@
     var lower = request.toLowerCase();
     var updated = JSON.parse(JSON.stringify(trip)); // deep clone, keep original intact for compare
     var message = "";
+    var changes = []; // bullet-point list of concrete changes, not just prose
     var before = updated.estimatedCost;
 
     if (/romantic/.test(lower)) {
@@ -474,30 +495,44 @@
           day.activities.push(createActivity(Object.assign({}, ACTIVITY_BANK.romantic[0])));
           day.activities.sort(function (a, b) { return a.time.localeCompare(b.time); });
           day.estimatedCost += ACTIVITY_BANK.romantic[0].price;
+          changes.push("Added a candlelit dinner on Day 1");
         }
       }
       updated.estimatedCost += ACTIVITY_BANK.romantic[0].price;
-      message = "Added a candlelit dinner on day 1 and leaned the whole trip more romantic.";
+      changes.push("Leaned the whole trip more romantic");
+      message = "Made it more romantic";
     } else if (/cheap|afford|save|budget/.test(lower)) {
       var reduction = Math.round(updated.estimatedCost * 0.14 / 10) * 10;
       updated.estimatedCost -= reduction;
+      var trimmedDays = [];
       updated.days.forEach(function (d) {
+        var before2 = d.activities.length;
         d.activities = d.activities.filter(function (a) { return a.price < 150; }); // drop the priciest splurge items
+        if (d.activities.length < before2) trimmedDays.push(d.dayNumber);
         d.estimatedCost = d.activities.reduce(function (s, a) { return s + a.price; }, 0);
       });
-      message = "Found about $" + reduction.toLocaleString() + " in savings by trimming the priciest optional activities — the core plan stays the same.";
+      if (trimmedDays.length) changes.push("Trimmed the priciest optional activities on Day " + trimmedDays.join(", "));
+      changes.push("Found about $" + reduction.toLocaleString() + " in savings — the core plan stays the same");
+      message = "Made it more affordable";
     } else if (/beach/.test(lower)) {
       var d2 = updated.days[updated.days.length - 1];
       if (d2 && ACTIVITY_BANK.beach[0]) {
         d2.activities.push(createActivity(Object.assign({}, ACTIVITY_BANK.beach[0])));
         d2.estimatedCost += ACTIVITY_BANK.beach[0].price;
         updated.estimatedCost += ACTIVITY_BANK.beach[0].price;
+        changes.push("Added a beach afternoon on Day " + d2.dayNumber);
       }
-      message = "Added a beach afternoon on your last day.";
+      message = "Added more beach time";
     } else if (/slow|relax/.test(lower)) {
       updated.travelStyle.unshift("slow travel");
-      updated.days.forEach(function (d) { d.activities = d.activities.slice(0, 3); });
-      message = "Thinned out each day to 3 activities max, so there's real time to slow down.";
+      var reducedDays = [];
+      updated.days.forEach(function (d) {
+        if (d.activities.length > 3) reducedDays.push(d.dayNumber);
+        d.activities = d.activities.slice(0, 3);
+      });
+      if (reducedDays.length) changes.push("Reduced the number of activities on Day " + reducedDays.join(", "));
+      changes.push("Thinned every day to 3 activities max, so there's real time to slow down");
+      message = "Slowed the pace down";
     } else if (/foodie|more food/.test(lower)) {
       var fday = updated.days[Math.floor(updated.days.length / 2)] || updated.days[0];
       if (fday && ACTIVITY_BANK.food[0]) {
@@ -507,22 +542,26 @@
           fday.activities.sort(function (a, b) { return a.time.localeCompare(b.time); });
           fday.estimatedCost += ACTIVITY_BANK.food[0].price;
           updated.estimatedCost += ACTIVITY_BANK.food[0].price;
+          changes.push("Added another food-forward stop on Day " + fday.dayNumber);
         }
       }
       if (updated.travelStyle.indexOf("food") === -1) updated.travelStyle.unshift("food");
-      message = "Added another food-forward stop — this trip leans foodie now.";
+      changes.push("This trip leans foodie now");
+      message = "Made it more foodie";
     } else if (/luxur/.test(lower)) {
       var bump = Math.round(updated.estimatedCost * 0.18 / 10) * 10;
       updated.estimatedCost += bump;
       if (updated.travelStyle.indexOf("luxury") === -1) updated.travelStyle.unshift("luxury");
-      message = "Upgraded a few touches — nicer stays, nicer tables. About $" + bump.toLocaleString() + " more.";
+      changes.push("Upgraded stays and tables across the trip");
+      changes.push("About $" + bump.toLocaleString() + " more, for noticeably nicer touches");
+      message = "Upgraded it";
     } else {
       message = "I can currently act on: “more romantic”, “cheaper”, “add a beach”, or “slow it down” — try one of those, or use the chips below.";
-      return { trip: trip, message: message, changed: false, before: before, after: before };
+      return { trip: trip, message: message, changes: [], changed: false, before: before, after: before };
     }
 
-    updated.changeLog.push({ request: request, message: message, at: new Date().toISOString() });
-    return { trip: updated, message: message, changed: true, before: before, after: updated.estimatedCost };
+    updated.changeLog.push({ request: request, message: message, changes: changes, at: new Date().toISOString() });
+    return { trip: updated, message: message, changes: changes, changed: true, before: before, after: updated.estimatedCost };
   }
 
   var MockTravelAIService = {
@@ -534,8 +573,8 @@
         return Object.assign({}, d, { whyItFits: whyItFits(d, prefs), estimatedBudget: estimateBudget(d, prefs) });
       }));
     },
-    generateTrip: function (prefs, destId) {
-      return Promise.resolve(generateTrip(prefs, destId));
+    generateTrip: function (prefs, destId, deepResearch) {
+      return Promise.resolve(generateTrip(prefs, destId, deepResearch));
     },
     modifyTrip: function (trip, request) {
       return Promise.resolve(modifyTrip(trip, request));

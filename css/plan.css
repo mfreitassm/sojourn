@@ -16,6 +16,7 @@
   font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
   color: var(--accent); text-align: center;
 }
+.demo-badge.live { color: var(--good); }
 
 /* ---- hero / plan shell ---- */
 #plan-view { min-height: 80vh; }
@@ -111,6 +112,79 @@
 .prompt-chip:hover { border-color: rgba(255,255,255,0.6); background: rgba(255,255,255,0.2); }
 
 .hero-error { margin-top: 18px; color: #ffd4c2; font-size: 13.5px; }
+.hero-error.dark { color: var(--warm); text-align: center; margin: 0 0 20px; }
+
+/* ---- research loading: "Sojourn is looking around" ---- */
+.research-loading { max-width: 420px; }
+.research-steps { display: flex; flex-direction: column; gap: 14px; margin-top: 30px; align-items: flex-start; }
+.research-step {
+  display: flex; align-items: center; gap: 12px; font-size: 15px; font-weight: 600; margin: 0;
+  color: rgba(255,255,255,0.4); transition: color 0.3s var(--ease-premium);
+}
+.research-step.active { color: #fff; }
+.research-step.done { color: rgba(255,255,255,0.75); }
+.research-step-mark {
+  width: 18px; height: 18px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+  border: 1.5px solid currentColor; font-size: 11px;
+}
+.research-step.active .research-step-mark { animation: orb-pulse 1.4s ease-in-out infinite; border-color: #fff; }
+@media (prefers-reduced-motion: reduce) { .research-step.active .research-step-mark { animation: none; } }
+
+/* ---- recommendation cards ---- */
+.recs-view { max-width: 720px; margin: 0 auto; padding: 56px 24px 90px; }
+.recs-view .eyebrow { text-align: center; display: block; }
+.recs-view .display-lg { text-align: center; margin: 8px 0 34px; }
+.recs-list { display: flex; flex-direction: column; gap: 30px; }
+
+.rec-card { border-radius: var(--radius-xl); overflow: hidden; background: var(--surface); box-shadow: var(--shadow); }
+.rec-card-media { height: 260px; border-radius: 0; }
+.rec-badge {
+  position: absolute; top: 18px; left: 18px; z-index: 1; background: var(--ink); color: var(--bg);
+  font-size: 10.5px; font-weight: 800; letter-spacing: 0.08em; padding: 6px 12px; border-radius: 999px;
+}
+.rec-card-caption { position: absolute; left: 22px; right: 22px; bottom: 18px; z-index: 1; }
+.rec-card-body { padding: 22px 26px 26px; }
+.rec-match { display: flex; align-items: baseline; gap: 6px; margin-bottom: 12px; }
+.rec-match-figure { font-family: 'Fraunces', serif; font-weight: 600; font-size: 26px; color: var(--accent); }
+.rec-match-label { font-size: 12px; font-weight: 700; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.05em; }
+.rec-why { font-size: 14.5px; line-height: 1.6; margin: 0 0 14px; }
+.rec-why strong { font-family: 'Fraunces', serif; font-style: italic; }
+.rec-card-body .mood-row { margin-bottom: 14px; }
+.rec-tradeoff { font-size: 13px; color: var(--ink-soft); background: var(--surface-2); border-radius: 10px; padding: 10px 14px; margin: 0 0 16px; }
+.rec-actions { margin-top: 18px; }
+
+.rec-sources { border-top: 1px solid var(--border); padding-top: 14px; margin-top: 4px; }
+.rec-sources-toggle { border: none; background: none; padding: 0; font-size: 12.5px; font-weight: 700; color: var(--accent); cursor: pointer; font-family: 'Manrope', sans-serif; }
+.rec-sources-toggle:hover { text-decoration: underline; }
+.rec-sources-panel { margin-top: 14px; }
+.rec-sources-note { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-soft); margin: 0 0 12px; }
+.evidence-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+.evidence-row { display: flex; gap: 10px; align-items: flex-start; font-size: 12.5px; }
+.evidence-basis {
+  flex-shrink: 0; font-size: 9.5px; font-weight: 800; letter-spacing: 0.04em; padding: 3px 7px; border-radius: 5px;
+  background: var(--surface-2); color: var(--ink-soft); margin-top: 1px;
+}
+.evidence-basis.basis-fact { background: var(--good-soft); color: var(--good); }
+.evidence-basis.basis-estimate { background: var(--warn-soft); color: var(--warn); }
+.evidence-basis.basis-inference { background: var(--accent-soft); color: var(--accent); }
+.evidence-body { display: flex; flex-direction: column; gap: 1px; }
+.evidence-claim { font-weight: 700; color: var(--ink); }
+.evidence-value { color: var(--ink-soft); }
+.score-breakdown { border-top: 1px solid var(--border); padding-top: 12px; display: flex; flex-direction: column; gap: 6px; }
+.score-row { display: flex; justify-content: space-between; font-size: 12.5px; color: var(--ink-soft); }
+
+/* ---- compare banner with bullet changes ---- */
+.compare-banner-head { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; justify-content: space-between; }
+.compare-changes { margin: 10px 0 0; padding-left: 18px; font-size: 13px; color: var(--good); }
+.compare-changes li { margin-bottom: 3px; }
+
+/* ---- itinerary neighbourhood note ---- */
+.itin-day-note { font-size: 12.5px; color: var(--ink-soft); margin: -2px 0 10px; }
+
+@media (max-width: 640px) {
+  .rec-card-media { height: 200px; }
+  .rec-card-body { padding: 18px 20px 22px; }
+}
 
 /* ---- listening ---- */
 .listening-view { padding-top: 20px; }
