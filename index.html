@@ -40,7 +40,7 @@
     --radius: 10px;
     --radius-lg: 20px;
     --radius-xl: 30px;
-    --overlay-img: linear-gradient(180deg, rgba(20,18,14,0) 0%, rgba(20,18,14,0.05) 40%, rgba(20,18,14,0.78) 100%);
+    --overlay-img: linear-gradient(180deg, rgba(20,18,14,0) 0%, rgba(20,18,14,0.08) 38%, rgba(20,18,14,0.85) 100%);
     --overlay-img-full: linear-gradient(180deg, rgba(20,18,14,0.12) 0%, rgba(20,18,14,0.28) 45%, rgba(20,18,14,0.86) 100%);
     --ease-premium: cubic-bezier(0.16, 1, 0.3, 1);
   }
@@ -58,7 +58,7 @@
       --ocean: #86bccd; --ocean-soft: #16262b;
       --shadow: 0 1px 2px rgba(0,0,0,0.35), 0 12px 32px -14px rgba(0,0,0,0.6);
       --shadow-float: 0 30px 70px -20px rgba(0,0,0,0.65);
-      --overlay-img: linear-gradient(180deg, rgba(6,5,3,0) 0%, rgba(6,5,3,0.1) 40%, rgba(6,5,3,0.88) 100%);
+      --overlay-img: linear-gradient(180deg, rgba(6,5,3,0) 0%, rgba(6,5,3,0.14) 38%, rgba(6,5,3,0.92) 100%);
       --overlay-img-full: linear-gradient(180deg, rgba(6,5,3,0.2) 0%, rgba(6,5,3,0.4) 45%, rgba(6,5,3,0.92) 100%);
     }
   }
@@ -75,7 +75,7 @@
     --ocean: #86bccd; --ocean-soft: #16262b;
     --shadow: 0 1px 2px rgba(0,0,0,0.35), 0 12px 32px -14px rgba(0,0,0,0.6);
     --shadow-float: 0 30px 70px -20px rgba(0,0,0,0.65);
-    --overlay-img: linear-gradient(180deg, rgba(6,5,3,0) 0%, rgba(6,5,3,0.1) 40%, rgba(6,5,3,0.88) 100%);
+    --overlay-img: linear-gradient(180deg, rgba(6,5,3,0) 0%, rgba(6,5,3,0.14) 38%, rgba(6,5,3,0.92) 100%);
     --overlay-img-full: linear-gradient(180deg, rgba(6,5,3,0.2) 0%, rgba(6,5,3,0.4) 45%, rgba(6,5,3,0.92) 100%);
   }
   * { box-sizing: border-box; }
@@ -112,6 +112,18 @@
     background: var(--warn-soft); color: var(--warn); border: 1px solid var(--warn);
   }
 
+  .status-badge {
+    position: fixed; top: 76px; right: 20px; z-index: 35;
+    display: inline-flex; align-items: center; gap: 7px;
+    background: var(--surface); border: 1px solid var(--border); box-shadow: var(--shadow);
+    border-radius: 999px; padding: 8px 15px 8px 12px; font-size: 12px; font-weight: 700;
+    color: var(--ink-soft); font-family: 'Manrope', sans-serif; cursor: default;
+  }
+  .status-badge-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--warn); flex-shrink: 0; }
+  @media (max-width: 768px) {
+    .status-badge { top: auto; bottom: 86px; right: 14px; left: 14px; justify-content: center; }
+  }
+
   /* ---- profile strip ---- */
   .profile-strip {
     margin-top: 24px; background: var(--surface); border: 1px solid var(--border);
@@ -121,6 +133,18 @@
   .profile-strip .pf-main { display: flex; gap: 30px; flex-wrap: wrap; font-size: 13.5px; }
   .profile-strip .pf-item .k { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-soft); margin-bottom: 3px; }
   .profile-strip .pf-item .v { font-weight: 700; font-family: 'Fraunces', serif; font-size: 15px; }
+  .pf-invite-link {
+    border: none; background: none; font-family: 'Manrope', sans-serif; font-weight: 700; font-size: 11.5px;
+    color: var(--accent); cursor: pointer; padding: 0; margin-left: 4px; vertical-align: 2px;
+  }
+  .pf-invite-link:hover { text-decoration: underline; }
+  .toast {
+    position: fixed; left: 50%; bottom: 30px; transform: translateX(-50%);
+    background: var(--ink); color: var(--bg); font-family: 'Manrope', sans-serif; font-size: 13px; font-weight: 600;
+    padding: 12px 20px; border-radius: 999px; box-shadow: var(--shadow-float); z-index: 60;
+    animation: rise-in 0.3s var(--ease-premium) both;
+  }
+  @media (max-width: 768px) { .toast { bottom: 94px; } }
   .chip-row { display: flex; flex-wrap: wrap; gap: 6px; }
   .chip {
     font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 20px;
@@ -636,8 +660,8 @@
   // ---------------- Rendering ----------------
 
   function render() {
-    root.innerHTML = renderTopbar() + renderBanner() + renderProfileStrip() + renderTripsSection();
-    modalRoot.innerHTML = renderModal();
+    root.innerHTML = renderTopbar() + renderProfileStrip() + renderTripsSection();
+    modalRoot.innerHTML = renderModal() + renderStatusBadge();
     wireEvents();
     notifyTripsChanged();
   }
@@ -647,9 +671,18 @@
     tripsChangeListeners.forEach(function (fn) { try { fn(); } catch (e) {} });
   }
 
-  function renderBanner() {
+  // A small floating badge instead of an always-open warning banner eating
+  // top-of-page space — the underlying condition (no live sync) is
+  // persistent, not a one-off event, so this isn't a toast that
+  // auto-dismisses; it just recedes into a corner until someone wants the
+  // detail (native title attribute — no extra UI needed for that).
+  function renderStatusBadge() {
     if (!state.dbOffline) return "";
-    return '<div class="wrap"><div class="banner">Live sync isn’t available in this preview, so nothing you enter here will be saved or show up on another device. Open this page from claude.ai to enable saving.</div></div>';
+    return (
+      '<div class="status-badge anim-rise" title="Nothing you enter here will be saved or show up on another device. Open this page from claude.ai to enable saving.">' +
+        '<span class="status-badge-dot"></span>Demo Mode — changes aren’t saved' +
+      '</div>'
+    );
   }
 
   function renderTopbar() {
@@ -679,7 +712,7 @@
       '<div class="wrap"><div class="profile-strip">' +
         '<div class="pf-main">' +
           '<div class="pf-item"><div class="k">Home</div><div class="v">' + escapeHtml(p.homeCity || "—") + '</div></div>' +
-          '<div class="pf-item"><div class="k">Usual party</div><div class="v">' + escapeHtml(p.defaultTravelers || "—") + ' traveler(s)</div></div>' +
+          '<div class="pf-item"><div class="k">Usual party</div><div class="v">' + escapeHtml(p.defaultTravelers || "—") + ' traveler(s) <button type="button" class="pf-invite-link" data-action="invite-companion">+ Invite</button></div></div>' +
           '<div class="pf-item"><div class="k">Budget style</div><div class="v">' + escapeHtml(p.budgetStyle || "—") + '</div></div>' +
         '</div>' +
         '<div class="chip-row">' + priorities.map(function (pr) { return '<span class="chip">' + escapeHtml(pr) + '</span>'; }).join("") + '</div>' +
@@ -1032,6 +1065,9 @@
         state.view = "editProfile";
         render();
         break;
+      case "invite-companion":
+        inviteCompanion();
+        break;
       case "open-trip":
         openTripDetail(e.currentTarget.getAttribute("data-trip"), null, { returnSection: "trips" });
         break;
@@ -1327,6 +1363,48 @@
   function flashCopy() {
     var btn = document.querySelector('[data-action="copy-brief"]');
     if (btn) { var orig = btn.textContent; btn.textContent = "Copied!"; setTimeout(function () { btn.textContent = orig; }, 1400); }
+  }
+
+  // Generic clipboard copy shared by "Copy brief" and "Invite companion" —
+  // same fallback path (execCommand) for browsers/contexts without the
+  // async Clipboard API.
+  function copyText(text, onDone) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(onDone, function () { fallbackCopyText(text, onDone); });
+    } else {
+      fallbackCopyText(text, onDone);
+    }
+  }
+  function fallbackCopyText(text, onDone) {
+    var ta = document.createElement("textarea");
+    ta.value = text; document.body.appendChild(ta); ta.select();
+    try { document.execCommand("copy"); if (onDone) onDone(); } catch (e) {}
+    document.body.removeChild(ta);
+  }
+  function showToast(message) {
+    document.querySelectorAll(".toast").forEach(function (t) { t.remove(); });
+    var el = document.createElement("div");
+    el.className = "toast";
+    el.textContent = message;
+    document.body.appendChild(el);
+    setTimeout(function () { el.remove(); }, 2600);
+  }
+
+  // Sojourn has no real accounts or invite system yet (Demo Mode) — rather
+  // than fake sending an invite, this copies a plain-text profile summary
+  // the user can genuinely paste to a travel companion themselves.
+  function inviteCompanion() {
+    var p = state.profile || {};
+    var lines = [
+      "Planning a trip on Sojourn —",
+      "Home: " + (p.homeCity || "not set"),
+      "Usual party: " + (p.defaultTravelers || "?") + " traveler(s)",
+      "Budget style: " + (p.budgetStyle || "not set")
+    ];
+    if ((p.priorities || []).length) lines.push("Priorities: " + p.priorities.join(", "));
+    copyText(lines.join("\n"), function () {
+      showToast("Copied your travel profile — paste it to a companion.");
+    });
   }
 
   function submitCosts() {

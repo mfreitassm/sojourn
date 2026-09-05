@@ -113,11 +113,27 @@
   }
 
   function renderBudget(trips, totalSpend, target, year) {
-    var pct = target ? Math.min(100, Math.round((totalSpend / target) * 100)) : 0;
     var over = totalSpend > target;
-    var rows = trips.filter(function (t) { return tripCost(t) > 0; }).map(function (t) {
+    var costedTrips = trips.filter(function (t) { return tripCost(t) > 0; });
+    var rows = costedTrips.map(function (t) {
       return '<div class="year-budget-row"><span>' + escapeHtml(destLabel(t)) + '</span><span>' + money(tripCost(t)) + '</span></div>';
     }).join("");
+
+    // Segmented, per-trip allocation instead of one flat fill. Under budget:
+    // segments are sized against the target, with unfilled track showing
+    // headroom. Over budget: segments are sized against actual spend (so
+    // they always sum to a full bar) with a marker showing where the
+    // target line actually falls.
+    var basis = over ? Math.max(totalSpend, 1) : Math.max(target, 1);
+    var segments = costedTrips.map(function (t, i) {
+      var cost = tripCost(t);
+      var segPct = Math.min(100, (cost / basis) * 100);
+      return '<div class="year-progress-seg seg-' + (i % 5) + (over ? " over" : "") + '" style="width:' + segPct + '%" title="' + escapeHtml(destLabel(t)) + ' — ' + money(cost) + '"></div>';
+    }).join("");
+    var targetMarker = over && target
+      ? '<div class="year-progress-target" style="left:' + Math.min(100, (target / basis) * 100) + '%" title="Your target: ' + money(target) + '"></div>'
+      : "";
+    var overNote = over ? '<p class="year-over-note">' + money(totalSpend - target) + ' over your target</p>' : "";
 
     return (
       '<section class="year-section">' +
@@ -129,7 +145,8 @@
               '<span class="year-budget-figure">' + money(totalSpend) + ' <span class="year-budget-of">/ ' + money(target) + '</span> <button type="button" class="year-edit-link" data-action="edit-budget-target">edit</button></span>'
             ) +
           '</div>' +
-          '<div class="year-progress"><div class="year-progress-fill' + (over ? " over" : "") + '" style="width:' + pct + '%"></div></div>' +
+          '<div class="year-progress">' + segments + targetMarker + '</div>' +
+          overNote +
           (rows ? '<div class="year-budget-rows">' + rows + '</div>' : '<p class="year-empty-note">No costs entered yet for ' + year + '.</p>') +
         '</div>' +
       '</section>'
@@ -187,8 +204,9 @@
     var months = MONTH_NAMES.map(function (label, i) {
       var monthTrips = byMonth[i] || [];
       var isPastMonth = year < today.getFullYear() || (isCurrentYear && i < currentMonth);
+      var hasTrip = monthTrips.length > 0;
       var body;
-      if (monthTrips.length) {
+      if (hasTrip) {
         body = monthTrips.map(function (t) { return renderTripMoment(t, label); }).join("");
       } else if (isPastMonth) {
         body = '<div class="year-month-row muted"><span class="year-month-row-label">' + label + '</span><span class="year-month-row-dash">—</span></div>';
@@ -201,7 +219,12 @@
           '</div>'
         );
       }
-      return body;
+      return (
+        '<div class="year-node' + (hasTrip ? " has-trip" : "") + '">' +
+          '<div class="year-node-rail"><span class="year-node-dot' + (hasTrip ? " filled" : "") + '"></span></div>' +
+          '<div class="year-node-content">' + body + '</div>' +
+        '</div>'
+      );
     }).join("");
 
     return '<section class="year-section"><div class="year-timeline">' + months + '</div></section>';

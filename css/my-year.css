@@ -36,10 +36,25 @@
 .year-budget-edit { display: flex; gap: 8px; align-items: center; }
 .year-budget-edit input { width: 110px; padding: 8px 12px; border-radius: 10px; border: 1px solid var(--border); font-family: 'Manrope', sans-serif; }
 
-.year-progress { height: 7px; border-radius: 6px; background: var(--surface-2); overflow: hidden; margin-bottom: 18px; }
-.year-progress-fill { height: 100%; background: var(--accent); border-radius: 6px; transition: width 0.5s var(--ease-premium); }
-.year-progress-fill.over { background: var(--warm); }
-@media (prefers-reduced-motion: reduce) { .year-progress-fill { transition: none; } }
+/* Segmented, interactive per-trip allocation bar */
+.year-progress { position: relative; height: 10px; border-radius: 6px; background: var(--surface-2); overflow: hidden; margin-bottom: 12px; display: flex; gap: 2px; }
+.year-progress-seg {
+  height: 100%; background: var(--accent); flex-shrink: 0; cursor: default;
+  transition: width 0.5s var(--ease-premium), filter 0.2s var(--ease-premium);
+}
+.year-progress-seg:hover { filter: brightness(1.12); }
+.year-progress-seg.seg-0 { opacity: 1; }
+.year-progress-seg.seg-1 { opacity: 0.82; }
+.year-progress-seg.seg-2 { opacity: 0.66; }
+.year-progress-seg.seg-3 { opacity: 0.52; }
+.year-progress-seg.seg-4 { opacity: 0.4; }
+.year-progress-seg.over { background: var(--warm); }
+.year-progress-target {
+  position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--ink);
+  border-radius: 2px;
+}
+.year-over-note { font-size: 12px; font-weight: 700; color: var(--warm); margin: 0 0 14px; }
+@media (prefers-reduced-motion: reduce) { .year-progress-seg { transition: none; } }
 
 .year-budget-rows { border-top: 1px solid var(--border); padding-top: 12px; }
 .year-budget-row { display: flex; justify-content: space-between; padding: 7px 0; font-size: 13.5px; color: var(--ink); }
@@ -76,8 +91,21 @@
 .year-map-arrow { color: var(--accent); font-size: 16px; }
 .year-map-note { text-align: center; font-size: 12px; color: var(--ink-soft); margin-top: 16px; }
 
-/* ---- timeline: large visual moments per month, minimal rows for gaps ---- */
-.year-timeline { display: flex; flex-direction: column; gap: 22px; }
+/* ---- timeline: a connected node rail down the left margin, large visual
+   moments per month with a trip, minimal rows for gaps ---- */
+.year-timeline { position: relative; display: flex; flex-direction: column; gap: 22px; }
+.year-timeline::before {
+  content: ""; position: absolute; top: 10px; bottom: 10px; left: 11px; width: 1px; background: var(--border);
+}
+.year-node { display: grid; grid-template-columns: 24px 1fr; column-gap: 16px; align-items: start; }
+.year-node-rail { display: flex; justify-content: center; padding-top: 26px; }
+.year-node.has-trip .year-node-rail { padding-top: 20px; }
+.year-node-dot {
+  position: relative; z-index: 1; width: 10px; height: 10px; border-radius: 50%;
+  background: var(--surface); border: 2px solid var(--border);
+}
+.year-node-dot.filled { background: var(--accent); border-color: var(--accent); }
+.year-node-content { min-width: 0; }
 
 .year-moment {
   position: relative; height: min(46vh, 380px); cursor: pointer;
@@ -98,17 +126,17 @@
 .year-moment-cost { font-family: 'Fraunces', serif; font-weight: 600; font-size: 16px; color: #fff; white-space: nowrap; }
 
 .year-month-row {
-  padding: 22px 4px; border-top: 1px solid var(--border); display: flex; align-items: center; gap: 18px; flex-wrap: wrap;
+  padding: 2px 4px 22px; display: flex; align-items: center; gap: 18px; flex-wrap: wrap;
 }
-.year-month-row:first-child { border-top: none; }
-.year-month-row.muted { padding: 12px 4px; color: var(--border); }
+.year-month-row.muted { padding: 2px 4px 8px; color: var(--border); }
 .year-month-row-label { font-size: 12px; font-weight: 800; letter-spacing: 0.1em; color: var(--accent); min-width: 44px; }
 .year-month-row.muted .year-month-row-label { color: var(--ink-soft); opacity: 0.55; }
 .year-month-row-dash { color: var(--border); }
 .year-month-row-copy { font-size: 13.5px; color: var(--ink-soft); margin: 0; flex: 1; min-width: 200px; }
 
 @media (max-width: 640px) {
-  .year-month { grid-template-columns: 1fr; gap: 6px; }
+  .year-node { grid-template-columns: 18px 1fr; column-gap: 10px; }
+  .year-timeline::before { left: 8px; }
   .year-moment { height: 300px; }
   .year-plan-cta { flex-direction: column; align-items: flex-start; }
   .year-month-row { flex-direction: column; align-items: flex-start; gap: 10px; }

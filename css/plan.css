@@ -29,7 +29,11 @@
 }
 .photo-shell-overlay {
   position: absolute; inset: 0;
-  background: linear-gradient(180deg, rgba(20,16,12,0.5) 0%, rgba(20,16,12,0.42) 42%, rgba(20,16,12,0.82) 100%);
+  /* Softened: less "dark scrim slapped over a photo", more a gentle warm
+     wash that keeps the image readable while the type stays crisp. A
+     faint text-shadow on .on-image (below) is the real legibility
+     guarantee, so this can afford to sit lighter. */
+  background: linear-gradient(180deg, rgba(30,24,16,0.36) 0%, rgba(30,24,16,0.28) 42%, rgba(20,16,12,0.72) 100%);
 }
 .photo-shell-inner { position: relative; z-index: 1; width: 100%; }
 
@@ -39,8 +43,8 @@
 }
 .hero .eyebrow, .hero .display-xl, .hero .lead { margin-bottom: 16px; }
 .hero .display-xl { margin-bottom: 20px; }
-.on-image { color: #fff; }
-.on-image.lead { color: rgba(255,255,255,0.88); }
+.on-image { color: #fff; text-shadow: 0 1px 16px rgba(0,0,0,0.22); }
+.on-image.lead { color: rgba(255,255,255,0.9); }
 
 /* ---- the mic orb: the central object of the homepage, not a small button ---- */
 .mic-stage { display: flex; flex-direction: column; align-items: center; margin: 8px 0 30px; }
@@ -86,6 +90,11 @@
 }
 .conversation-input-field::placeholder { color: rgba(255,255,255,0.68); }
 .conversation-input-field:focus { outline: none; }
+/* Brief tactile confirmation when a prompt chip fills this field */
+.conversation-input:has(.chip-fill) { border-color: rgba(255,255,255,0.7); }
+@keyframes chip-fill-pulse { 0% { opacity: 0.5; } 100% { opacity: 1; } }
+.chip-fill { animation: chip-fill-pulse 0.32s var(--ease-premium); }
+@media (prefers-reduced-motion: reduce) { .chip-fill { animation: none; } }
 .trip-section .conversation-input {
   background: var(--surface-2); border: 1px solid var(--border); padding: 6px 6px 6px 18px; margin: 14px 0 0;
 }

@@ -7,11 +7,30 @@
 .explore-hero { max-width: 720px; margin: 0 auto; padding: 60px 24px 20px; text-align: center; }
 .explore-hero .lead { margin-top: 14px; }
 
-.explore-grid-wrap { max-width: 1080px; margin: 0 auto; padding: 24px 24px 10px; }
-.explore-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 22px; }
+/* ---- vibe filter pills ---- */
+.explore-vibes {
+  max-width: 1080px; margin: 8px auto 0; padding: 0 24px;
+  display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;
+}
+.vibe-pill {
+  border: 1px solid var(--border); background: var(--surface); border-radius: 999px;
+  padding: 9px 17px; font-size: 12.5px; font-weight: 700; color: var(--ink-soft); cursor: pointer;
+  font-family: 'Manrope', sans-serif; letter-spacing: 0.01em;
+  transition: background 0.2s var(--ease-premium), color 0.2s var(--ease-premium), border-color 0.2s var(--ease-premium);
+  -webkit-user-select: none; user-select: none;
+}
+.vibe-pill:hover { border-color: var(--accent); color: var(--ink); }
+.vibe-pill.on { background: var(--ink); border-color: var(--ink); color: var(--bg); }
+
+.explore-grid-wrap { max-width: 1080px; margin: 0 auto; padding: 30px 24px 10px; }
+
+/* A 6-unit fine grid lets a "featured" card (span 4) sit beside a
+   companion (span 2), with the remainder balanced beneath it — a
+   deliberate editorial mosaic instead of an uneven trailing row. */
+.explore-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 22px; }
 
 .explore-card {
-  height: 380px; cursor: pointer;
+  height: 380px; cursor: pointer; min-width: 0;
   transition: transform 0.3s var(--ease-premium), box-shadow 0.3s var(--ease-premium);
   box-shadow: var(--shadow);
   -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
@@ -22,10 +41,16 @@
 .explore-card-caption .display-lg { margin-bottom: 8px; }
 .explore-card-blurb { font-family: 'Fraunces', serif; font-style: italic; font-weight: 500; font-size: 14.5px; margin: 0; }
 
+.explore-empty { text-align: center; color: var(--ink-soft); font-size: 14px; padding: 60px 20px; }
+
 .explore-cta { max-width: 720px; margin: 40px auto 90px; padding: 0 24px; text-align: center; }
 .explore-cta .lead { margin-bottom: 16px; }
 
+@media (max-width: 780px) {
+  .explore-grid { grid-template-columns: 1fr; }
+  .explore-card { grid-column: span 1 !important; height: 320px; }
+}
+
 @media (max-width: 640px) {
   .explore-hero { padding: 44px 20px 16px; }
-  .explore-card { height: 320px; }
 }

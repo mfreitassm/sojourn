@@ -469,7 +469,17 @@
         submitDescription(document.getElementById("hero-text").value);
         break;
       case "use-chip":
-        submitDescription(e.currentTarget.getAttribute("data-text"));
+        // Land the phrase in the input first (visible, tactile) before it
+        // submits — a beat of "you said this" rather than an instant jump-cut.
+        var chipText = e.currentTarget.getAttribute("data-text");
+        var heroInput = document.getElementById("hero-text");
+        if (heroInput) {
+          heroInput.value = chipText;
+          heroInput.classList.add("chip-fill");
+          setTimeout(function () { submitDescription(chipText); }, 320);
+        } else {
+          submitDescription(chipText);
+        }
         break;
       case "set-pace":
         confirmPace(e.currentTarget.getAttribute("data-pace"));
